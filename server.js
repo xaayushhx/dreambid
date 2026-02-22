@@ -89,6 +89,46 @@ app.use((err, req, res, next) => {
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Run migrations
+async function runMigrations() {
+  try {
+    const migrationPath = path.join(__dirname, 'migrations_add_property_fields.sql');
+    
+    // Check if migration file exists
+    if (!fs.existsSync(migrationPath)) {
+      console.log('ℹ️  No pending migrations');
+      return;
+    }
+    
+    console.log('🔄 Running migrations...');
+    const migrationSql = fs.readFileSync(migrationPath, 'utf-8');
+    
+    // Split by semicolon and execute each statement
+    const statements = migrationSql
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0);
+    
+    for (const statement of statements) {
+      try {
+        await pool.query(statement);
+      } catch (err) {
+        // Ignore "already exists" errors for idempotency
+        if (err.message.includes('already exists') || err.message.includes('duplicate')) {
+          console.log('ℹ️  Column/constraint already exists (skipping):', err.message.split('\n')[0]);
+        } else {
+          throw err;
+        }
+      }
+    }
+    
+    console.log('✅ Migrations completed successfully');
+  } catch (error) {
+    console.error('⚠️  Migration error:', error.message);
+    // Don't fail startup on migration errors
+  }
+}
+
 // Initialize database on startup
 async function initializeDatabase() {
   try {
@@ -164,6 +204,9 @@ async function initializeDatabase() {
 
 // Initialize database before starting server
 await initializeDatabase();
+
+// Run migrations after database initialization
+await runMigrations();
 
 // Initialize cleanup service (scheduled jobs)
 CleanupService.initSchedules();

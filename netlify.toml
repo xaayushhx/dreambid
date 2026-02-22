@@ -11,6 +11,14 @@
   to = "/index.html"
   status = 200
 
+[context.production]
+  command = "npm run build"
+  environment = { NODE_ENV = "production" }
+
+[context.deploy-preview]
+  command = "npm run build"
+  environment = { NODE_ENV = "development" }
+
 [functions]
   directory = "functions"
   included_files = ["src/**/*.jsx", "src/**/*.js"]
