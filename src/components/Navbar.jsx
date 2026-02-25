@@ -187,7 +187,7 @@ function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="text-text-nav hover:text-gold hover:bg-midnight-800 block px-4 py-3 rounded-btn text-base font-medium transition-colors"
               >
-                Contact Us
+                Contact-Us
               </Link>
               {isAuthenticated && user ? (
                 <>
