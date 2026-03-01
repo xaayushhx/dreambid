@@ -213,30 +213,78 @@ function Home() {
   return (
     <div>
       {/* Hero Section with Overlaid Search Bar */}
-      <div className="relative bg-gradient-to-b from-midnight-950 to-midnight-900 text-white pt-8 md:pt-12 pb-20 md:pb-32 overflow-hidden">
+      <div className="relative bg-gradient-to-b from-midnight-950 to-midnight-900 text-white pt-16 md:pt-24 pb-20 md:pb-32 overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}></div>
-        <div className="relative max-w-5xl mx-auto px-4 md:px-8 mb-8">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif font-bold mb-4 md:mb-6 leading-tight text-text-primary max-w-3xl">
-            Invest in Curated Luxury Real Estate Through Transparent Bidding
-          </h1>
-          <p className="text-sm md:text-base lg:text-lg text-text-muted mb-8 md:mb-10 max-w-2xl leading-relaxed">
-            A premium platform crafted for serious investors to discover, evaluate, and bid on high-value properties with trust and clarity.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 items-start">
-            <Link
-              to="/properties"
-              className="btn-primary inline-flex items-center justify-center gap-2 text-center whitespace-nowrap"
-            >
-              Explore Properties
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-            <Link to="/register" className="btn-secondary inline-flex items-center justify-center gap-2 text-center whitespace-nowrap">
-              Get Started
-            </Link>
+        <div className="relative max-w-6xl mx-auto px-4 md:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
+            {/* Left Content */}
+            <div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-6 leading-tight text-white max-w-md">
+                Buy, Bank-Auctioned Properties
+              </h1>
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg className="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="text-sm md:text-base text-text-secondary">
+                    Significant Discounts on Market Value
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg className="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="text-sm md:text-base text-text-secondary">
+                    100% Clear & Verifiable Properties
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg className="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="text-sm md:text-base text-text-secondary">
+                    Hassle-Free Loan Options
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full sm:w-auto">
+                <Link
+                  to="/register"
+                  className="btn-primary inline-flex items-center justify-center gap-2 text-center whitespace-nowrap w-full sm:w-auto"
+                >
+                  Register Your Requirements
+                </Link>
+                <Link
+                  to="/properties"
+                  className="btn-secondary inline-flex items-center justify-center gap-2 text-center whitespace-nowrap w-full sm:w-auto"
+                >
+                  View Properties
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+            
+            {/* Right Visual - House Image */}
+            <div className="hidden lg:block">
+              <div className="relative h-96 rounded-2xl overflow-hidden">
+                <img 
+                  src="/house.png" 
+                  alt="Luxury Property" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -244,8 +292,8 @@ function Home() {
       {/* Search Bar Section */}
       <div className="relative -mt-12 sm:-mt-16 md:-mt-20 px-4 sm:px-6 md:px-8 pb-0 z-10">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-midnight-800 rounded-2xl shadow-2xl overflow-hidden border border-midnight-700">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 p-0">
+          <div className="bg-midnight-800 rounded-2xl shadow-2xl border border-midnight-700" style={{overflow: 'visible'}}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 p-0 overflow-visible">
               {/* Search Locality Input */}
               <div className="border-b md:border-b-0 md:border-r border-midnight-700 p-6">
                 <label className="block text-xs font-semibold text-text-soft uppercase tracking-wide mb-3">Search Locality, City or State</label>

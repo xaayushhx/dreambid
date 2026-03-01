@@ -180,7 +180,7 @@ function Register() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
+    <div className="min-h-screen bg-gradient-to-b from-midnight-950 to-midnight-900">
       
 
       {/* Main Content */}
@@ -189,23 +189,23 @@ function Register() {
           {/* Left Column - Forms (75%) */}
           <div className="flex-1 space-y-8">
             {/* Basic Details Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:p-8">
+            <div className="bg-midnight-800 rounded-2xl shadow-sm border border-midnight-700 p-6 lg:p-8">
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Basic Details</h2>
-                <p className="text-sm text-gray-500">Fields marked with * are mandatory.</p>
+                <h2 className="text-xl font-semibold text-text-primary mb-2">Basic Details</h2>
+                <p className="text-sm text-text-soft">Fields marked with * are mandatory.</p>
               </div>
 
               {errors.submit && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-800">{errors.submit}</p>
+                <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded-xl">
+                  <p className="text-red-400">{errors.submit}</p>
                 </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Name */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Name <span className="text-red-600">*</span>
+                  <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2">
+                    Name <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -213,20 +213,20 @@ function Register() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.name ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                    className={`w-full px-4 py-3 text-sm bg-midnight-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 ${
+                      errors.name ? 'border-red-500 bg-red-900/20' : 'border-midnight-600'
                     }`}
                     placeholder="Enter your full name"
                   />
                   {errors.name && (
-                    <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+                    <p className="mt-1 text-xs text-red-400">{errors.name}</p>
                   )}
                 </div>
 
                 {/* Contact Number */}
                 <div>
-                  <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Number <span className="text-red-600">*</span>
+                  <label htmlFor="contactNumber" className="block text-sm font-medium text-text-primary mb-2">
+                    Contact Number <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="tel"
@@ -234,20 +234,20 @@ function Register() {
                     name="contactNumber"
                     value={formData.contactNumber}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.contactNumber ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                    className={`w-full px-4 py-3 text-sm bg-midnight-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 ${
+                      errors.contactNumber ? 'border-red-500 bg-red-900/20' : 'border-midnight-600'
                     }`}
                     placeholder="Enter your 10-digit mobile number"
                   />
                   {errors.contactNumber && (
-                    <p className="mt-1 text-xs text-red-600">{errors.contactNumber}</p>
+                    <p className="mt-1 text-xs text-red-400">{errors.contactNumber}</p>
                   )}
                 </div>
 
                 {/* Email ID */}
                 <div>
-                  <label htmlFor="emailId" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email ID <span className="text-red-600">*</span>
+                  <label htmlFor="emailId" className="block text-sm font-medium text-text-primary mb-2">
+                    Email ID <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="email"
@@ -255,19 +255,19 @@ function Register() {
                     name="emailId"
                     value={formData.emailId}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.emailId ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                    className={`w-full px-4 py-3 text-sm bg-midnight-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 ${
+                      errors.emailId ? 'border-red-500 bg-red-900/20' : 'border-midnight-600'
                     }`}
                     placeholder="Enter your email address"
                   />
                   {errors.emailId && (
-                    <p className="mt-1 text-xs text-red-600">{errors.emailId}</p>
+                    <p className="mt-1 text-xs text-red-400">{errors.emailId}</p>
                   )}
                 </div>
 
                 {/* Address */}
                 <div className="md:col-span-2">
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="address" className="block text-sm font-medium text-text-primary mb-2">
                     Address
                   </label>
                   <textarea
@@ -276,7 +276,7 @@ function Register() {
                     value={formData.address}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                    className="w-full px-4 py-3 text-sm bg-midnight-700 border border-midnight-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 resize-none"
                     placeholder="Enter your address (optional)"
                   />
                 </div>
@@ -284,10 +284,10 @@ function Register() {
             </div>
 
             {/* Requirement Details Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:p-8">
+            <div className="bg-midnight-800 rounded-2xl shadow-sm border border-midnight-700 p-6 lg:p-8">
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">Requirement Details</h2>
-                <p className="text-sm text-gray-500">Fields marked with * are mandatory.</p>
+                <h2 className="text-xl font-semibold text-text-primary mb-2">Requirement Details</h2>
+                <p className="text-sm text-text-soft">Fields marked with * are mandatory.</p>
               </div>
 
               {/* Requirement Tabs */}
@@ -299,8 +299,8 @@ function Register() {
                       onClick={() => setActiveRequirementTab(index)}
                       className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                         activeRequirementTab === index
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? 'bg-gold text-midnight-950'
+                          : 'bg-midnight-700 text-text-secondary hover:bg-midnight-600'
                       }`}
                     >
                       Requirement {index + 1}
@@ -310,7 +310,7 @@ function Register() {
                             e.stopPropagation();
                             removeRequirement(index);
                           }}
-                          className="ml-2 text-red-500 hover:text-red-700"
+                          className="ml-2 text-red-400 hover:text-red-300"
                         >
                           ×
                         </button>
@@ -319,7 +319,7 @@ function Register() {
                   ))}
                   <button
                     onClick={addRequirement}
-                    className="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all duration-200"
+                    className="px-3 py-2 text-sm font-medium text-gold bg-gold/10 rounded-lg hover:bg-gold/20 transition-all duration-200"
                   >
                     + Add Requirement
                   </button>
@@ -335,34 +335,34 @@ function Register() {
                   <div className="space-y-6">
                     {/* Preferred City / Locality */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Preferred City / Locality <span className="text-red-600">*</span>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Preferred City / Locality <span className="text-red-400">*</span>
                       </label>
                       <input
                         type="text"
                         value={requirement.preferredCity}
                         onChange={(e) => handleRequirementChange(index, 'preferredCity', e.target.value)}
-                        className={`w-full px-4 py-3 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                          errors[`preferredCity_${index}`] ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                        className={`w-full px-4 py-3 text-sm bg-midnight-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 ${
+                          errors[`preferredCity_${index}`] ? 'border-red-500 bg-red-900/20' : 'border-midnight-600'
                         }`}
                         placeholder="Enter preferred city or locality"
                       />
                       {errors[`preferredCity_${index}`] && (
-                        <p className="mt-1 text-xs text-red-600">{errors[`preferredCity_${index}`]}</p>
+                        <p className="mt-1 text-xs text-red-400">{errors[`preferredCity_${index}`]}</p>
                       )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Budget */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Budget <span className="text-red-600">*</span>
+                        <label className="block text-sm font-medium text-text-primary mb-2">
+                          Budget <span className="text-red-400">*</span>
                         </label>
                         <select
                           value={requirement.budget}
                           onChange={(e) => handleRequirementChange(index, 'budget', e.target.value)}
-                          className={`w-full px-4 py-3 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                            errors[`budget_${index}`] ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                          className={`w-full px-4 py-3 text-sm bg-midnight-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 ${
+                            errors[`budget_${index}`] ? 'border-red-500 bg-red-900/20' : 'border-midnight-600'
                           }`}
                         >
                           <option value="">Select Budget</option>
@@ -371,20 +371,20 @@ function Register() {
                           ))}
                         </select>
                         {errors[`budget_${index}`] && (
-                          <p className="mt-1 text-xs text-red-600">{errors[`budget_${index}`]}</p>
+                          <p className="mt-1 text-xs text-red-400">{errors[`budget_${index}`]}</p>
                         )}
                       </div>
 
                       {/* Property Type */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Property Type <span className="text-red-600">*</span>
+                        <label className="block text-sm font-medium text-text-primary mb-2">
+                          Property Type <span className="text-red-400">*</span>
                         </label>
                         <select
                           value={requirement.propertyType}
                           onChange={(e) => handleRequirementChange(index, 'propertyType', e.target.value)}
-                          className={`w-full px-4 py-3 text-sm bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                            errors[`propertyType_${index}`] ? 'border-red-500 bg-red-50' : 'border-gray-200'
+                          className={`w-full px-4 py-3 text-sm bg-midnight-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 ${
+                            errors[`propertyType_${index}`] ? 'border-red-500 bg-red-900/20' : 'border-midnight-600'
                           }`}
                         >
                           <option value="">Select Property Type</option>
@@ -393,15 +393,15 @@ function Register() {
                           ))}
                         </select>
                         {errors[`propertyType_${index}`] && (
-                          <p className="mt-1 text-xs text-red-600">{errors[`propertyType_${index}`]}</p>
+                          <p className="mt-1 text-xs text-red-400">{errors[`propertyType_${index}`]}</p>
                         )}
                       </div>
                     </div>
 
                     {/* Requirement Type */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Requirement Type <span className="text-red-600">*</span>
+                      <label className="block text-sm font-medium text-text-primary mb-3">
+                        Requirement Type <span className="text-red-400">*</span>
                       </label>
                       <div className="flex gap-6">
                         <label className="flex items-center cursor-pointer">
@@ -411,9 +411,9 @@ function Register() {
                             value="immediate"
                             checked={requirement.requirementType === 'immediate'}
                             onChange={(e) => handleRequirementChange(index, 'requirementType', e.target.value)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            className="w-4 h-4 text-gold border-midnight-600 focus:ring-gold"
                           />
-                          <span className="ml-2 text-sm text-gray-700">Immediate</span>
+                          <span className="ml-2 text-sm text-text-secondary">Immediate</span>
                         </label>
                         <label className="flex items-center cursor-pointer">
                           <input
@@ -422,9 +422,9 @@ function Register() {
                             value="future"
                             checked={requirement.requirementType === 'future'}
                             onChange={(e) => handleRequirementChange(index, 'requirementType', e.target.value)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            className="w-4 h-4 text-gold border-midnight-600 focus:ring-gold"
                           />
-                          <span className="ml-2 text-sm text-gray-700">Future</span>
+                          <span className="ml-2 text-sm text-text-secondary">Future</span>
                         </label>
                       </div>
                     </div>
@@ -436,7 +436,7 @@ function Register() {
 
           {/* Right Column - Action Panel (25%) */}
           <div className="lg:w-[320px] lg:sticky lg:top-8 lg:h-fit">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-midnight-800 rounded-2xl shadow-sm border border-midnight-700 p-6">
               <div className="space-y-6">
                 {/* Terms & Conditions */}
                 <div className="flex items-start gap-3">
@@ -445,10 +445,10 @@ function Register() {
                     id="terms"
                     checked={acceptedTerms}
                     onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="mt-1 w-4 h-4 text-gold border-midnight-600 rounded focus:ring-gold"
                   />
-                  <label htmlFor="terms" className="text-sm text-gray-600 leading-tight">
-                    By continuing, you accept the <span className="text-blue-600 font-medium">Terms & Conditions</span> and <span className="text-blue-600 font-medium">Privacy Policy</span>
+                  <label htmlFor="terms" className="text-sm text-text-secondary leading-tight">
+                    By continuing, you accept the <span className="text-gold font-medium">Terms & Conditions</span> and <span className="text-gold font-medium">Privacy Policy</span>
                   </label>
                 </div>
 
@@ -457,11 +457,11 @@ function Register() {
                   <button
                     onClick={handleSubmit}
                     disabled={isSubmitting || !acceptedTerms}
-                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-6 py-3 bg-gold text-midnight-950 rounded-xl hover:bg-gold/90 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-midnight-950 border-t-transparent rounded-full animate-spin"></div>
                         Submitting...
                       </div>
                     ) : (
@@ -471,23 +471,23 @@ function Register() {
                   
                   <button
                     onClick={() => navigate('/')}
-                    className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-medium"
+                    className="w-full px-6 py-3 bg-midnight-700 text-text-primary rounded-xl hover:bg-midnight-600 transition-all duration-200 font-medium"
                   >
                     Cancel
                   </button>
                 </div>
 
                 {/* Info Section */}
-                <div className="pt-4 border-t border-gray-200">
+                <div className="pt-4 border-t border-midnight-700">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="w-6 h-6 bg-gold/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3 h-3 text-gold" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm">What happens next?</h3>
-                      <p className="text-gray-600 text-xs leading-relaxed">
+                      <h3 className="font-medium text-text-primary mb-1 text-sm">What happens next?</h3>
+                      <p className="text-text-secondary text-xs leading-relaxed">
                         Once you submit your requirements, our team will review your information and contact you within 24-48 hours to discuss your property needs in detail.
                       </p>
                     </div>
@@ -500,27 +500,27 @@ function Register() {
       </div>
 
       {/* Mobile Fixed Bottom CTA */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-40">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-midnight-800 border-t border-midnight-700 p-4 shadow-lg z-40">
         <div className="flex items-start gap-3 mb-3">
           <input
             type="checkbox"
             id="terms-mobile"
             checked={acceptedTerms}
             onChange={(e) => setAcceptedTerms(e.target.checked)}
-            className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="mt-1 w-4 h-4 text-gold border-midnight-600 rounded focus:ring-gold"
           />
-          <label htmlFor="terms-mobile" className="text-sm text-gray-600 leading-tight">
-            By continuing, you accept the <span className="text-blue-600 font-medium">Terms & Conditions</span> and <span className="text-blue-600 font-medium">Privacy Policy</span>
+          <label htmlFor="terms-mobile" className="text-sm text-text-secondary leading-tight">
+            By continuing, you accept the <span className="text-gold font-medium">Terms & Conditions</span> and <span className="text-gold font-medium">Privacy Policy</span>
           </label>
         </div>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || !acceptedTerms}
-          className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-6 py-3 bg-gold text-midnight-950 rounded-xl hover:bg-gold/90 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-midnight-950 border-t-transparent rounded-full animate-spin"></div>
               Submitting...
             </div>
           ) : (
