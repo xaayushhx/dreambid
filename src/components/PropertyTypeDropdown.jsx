@@ -49,7 +49,7 @@ function PropertyTypeDropdown({ value, onChange }) {
     : `${selectedValues.length} Selected`;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef} style={{overflow: 'visible'}}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full px-4 py-3 bg-midnight-800 border border-midnight-700 text-text-primary rounded-input focus:ring-2 focus:ring-gold focus:border-transparent outline-none transition text-left flex items-center justify-between"
