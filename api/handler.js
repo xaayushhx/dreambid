@@ -6,7 +6,6 @@ const app = express();
 
 // CORS Configuration
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://dreambidp.vercel.app',
   'https://dreambidp.vercel.app',
   'https://dreambid.netlify.app',
   'https://dreambid-new.netlify.app',
@@ -24,10 +23,8 @@ const corsOptions = {
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
 
 // Middleware
@@ -35,64 +32,28 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Load routes dynamically
-async function setupRoutes() {
-  try {
-    const [authRoutes, userRoutes, activityRoutes, propertyRoutes, enquiryRoutes, interestRoutes, blogRoutes, userRegistrationRoutes] = await Promise.all([
-      import('../routes/auth.js').then(m => m.default),
-      import('../routes/user.js').then(m => m.default),
-      import('../routes/activity.js').then(m => m.default),
-      import('../routes/properties.js').then(m => m.default),
-      import('../routes/enquiries.js').then(m => m.default),
-      import('../routes/interests.js').then(m => m.default),
-      import('../routes/blogs.js').then(m => m.default),
-      import('../routes/user-registrations.js').then(m => m.default),
-    ]);
-    
-    app.use('/api/auth', authRoutes);
-    app.use('/api/user', userRoutes);
-    app.use('/api/activity', activityRoutes);
-    app.use('/api/properties', propertyRoutes);
-    app.use('/api/enquiries', enquiryRoutes);
-    app.use('/api/interests', interestRoutes);
-    app.use('/api/blogs', blogRoutes);
-    app.use('/api/user-registrations', userRegistrationRoutes);
-  } catch (err) {
-    console.error('Route import error:', err);
-  }
-}
-
-// Initialize routes on first request
-let routesLoaded = false;
-app.use((req, res, next) => {
-  if (!routesLoaded) {
-    routesLoaded = true;
-    setupRoutes().catch(err => console.error('Setup routes error:', err));
-  }
-  next();
-});
-
-// Health check endpoint - respond immediately without DB
+// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV 
+    timestamp: new Date().toISOString()
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    message: 'Something went wrong!', 
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined 
-  });
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working' });
 });
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ message: 'Internal server error' });
 });
 
 export default serverless(app);
