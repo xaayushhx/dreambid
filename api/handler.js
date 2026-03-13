@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import serverless from 'serverless-http';
 import pool from '../config/database.js';
 import CleanupService from '../services/CleanupService.js';
 
@@ -190,4 +191,4 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-export default app;
+export default serverless(app);
