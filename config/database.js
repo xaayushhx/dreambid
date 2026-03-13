@@ -10,11 +10,11 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 // Build connection config
 let dbConfig;
 
-// Use DATABASE_URL if available (Railway/Render), otherwise use individual env vars
+// Use DATABASE_URL if available (Neon/Railway/Render), otherwise use individual env vars
 if (process.env.DATABASE_URL) {
   dbConfig = {
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl: { rejectUnauthorized: false }, // Neon requires SSL
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
