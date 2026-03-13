@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/handler.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/dist/index.html"
+    }
+  ]
+}
