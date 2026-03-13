@@ -153,11 +153,31 @@ async function initializeDatabase() {
 
 // Initialize on first request
 let initialized = false;
+let initPromise = null;
+
+const initHandler = async () => {
+  if (initialized) return;
+  if (initPromise) return initPromise;
+  
+  initPromise = (async () => {
+    try {
+      await initializeDatabase();
+      CleanupService.initSchedules();
+      initialized = true;
+    } catch (error) {
+      console.error('Initialization error:', error);
+      // Continue anyway - some features may work without full initialization
+    }
+  })();
+  
+  return initPromise;
+};
+
 app.use(async (req, res, next) => {
-  if (!initialized) {
-    await initializeDatabase();
-    CleanupService.initSchedules();
-    initialized = true;
+  try {
+    await initHandler();
+  } catch (error) {
+    console.error('Init middleware error:', error);
   }
   next();
 });
