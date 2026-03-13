@@ -10,7 +10,7 @@ function Login() {
   const [loginType, setLoginType] = useState('user'); // 'user' or 'admin'
   
   const [formData, setFormData] = useState({
-    email: '',
+    phone: '',
     password: ''
   });
   
@@ -21,10 +21,10 @@ function Login() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(formData.phone.replace(/\s/g, ''))) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
     }
 
     if (!formData.password) {
@@ -63,7 +63,7 @@ function Login() {
 
     try {
       const response = await login({
-        email: formData.email,
+        phone: formData.phone,
         password: formData.password
       });
 
@@ -75,7 +75,7 @@ function Login() {
           toast.error('This account does not have admin privileges');
           setErrors(prev => ({
             ...prev,
-            email: 'Admin account required'
+            phone: 'Admin account required'
           }));
           return;
         }
@@ -88,7 +88,7 @@ function Login() {
           toast.error('Please use Entity Login for admin accounts');
           setErrors(prev => ({
             ...prev,
-            email: 'Use Entity Login for admin'
+            phone: 'Use Entity Login for admin'
           }));
           return;
         }
@@ -103,7 +103,7 @@ function Login() {
       if (error.response?.status === 401) {
         setErrors(prev => ({
           ...prev,
-          password: 'Invalid email or password'
+          password: 'Invalid phone number or password'
         }));
       }
     } finally {
@@ -151,24 +151,24 @@ function Login() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email */}
+          {/* Phone Number */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1">
-              Email Address
+            <label htmlFor="phone" className="block text-sm font-medium text-text-primary mb-1">
+              Phone Number
             </label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
               onChange={handleInputChange}
-              placeholder="your@email.com"
+              placeholder="Enter your 10-digit phone number"
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-midnight-700 text-white placeholder-text-muted ${
-                errors.email ? 'border-red-500' : 'border-midnight-600'
+                errors.phone ? 'border-red-500' : 'border-midnight-600'
               }`}
             />
-            {errors.email && (
-              <p className="text-red-400 text-sm mt-1">{errors.email}</p>
+            {errors.phone && (
+              <p className="text-red-400 text-sm mt-1">{errors.phone}</p>
             )}
           </div>
 

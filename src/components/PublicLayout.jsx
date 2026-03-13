@@ -1,12 +1,14 @@
 import { Outlet, Link } from 'react-router-dom';
 import Navbar from './Navbar';
+import BottomNavigation from './BottomNavigation';
 
 function PublicLayout() {
   return (
-    <div className="min-h-screen bg-midnight-900 flex flex-col">
+    <div className="min-h-screen bg-midnight-900 flex flex-col pt-safe">
       <Navbar />
-      <main className="relative flex-grow"><Outlet /></main>
-      <footer className="bg-gradient-to-b from-midnight-900 to-midnight-950 text-white py-12 md:py-16 border-t border-midnight-700">
+      <main className="relative flex-grow pb-32 md:pb-0"><Outlet /></main>
+      <BottomNavigation />
+      <footer className="hidden lg:block bg-gradient-to-b from-midnight-900 to-midnight-950 text-white py-12 md:py-16 border-t border-midnight-700">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-12">
             {/* Brand */}

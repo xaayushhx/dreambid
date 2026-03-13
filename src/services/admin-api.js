@@ -76,5 +76,12 @@ export const interestsAPI = {
   getStats: (propertyId) => api.get(`/interests/stats/${propertyId}`),
 };
 
+// User Registrations API
+export const userRegistrationsAPI = {
+  getAll: (params) => api.get('/user-registrations', { params }),
+  getById: (id) => api.get(`/user-registrations/${id}`),
+  create: (data) => api.post('/user-registrations', data),
+};
+
 export default api;
 

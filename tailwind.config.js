@@ -89,6 +89,11 @@ export default {
         'card-gap': '40px',
         'hero-margin': '80px',
         'trust-margin': '110px',
+        // Safe area padding for notch/status bar
+        'safe': 'max(0px, env(safe-area-inset-top))',
+      },
+      padding: {
+        'safe': 'env(safe-area-inset-top)',
       },
     },
   },

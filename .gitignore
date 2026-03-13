@@ -40,3 +40,9 @@ Thumbs.db
 # Database
 *.db
 *.sqlite
+
+# Mobile build files
+android/
+ios/
+dreambid-release.keystore
+.gradle/

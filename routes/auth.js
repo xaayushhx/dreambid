@@ -28,16 +28,27 @@ router.post('/register', [
 ], AuthController.register);
 
 // @route   POST /api/auth/login
-// @desc    Login user and receive JWT token
+// @desc    Login user and receive JWT token (accepts phone or email)
 // @access  Public
 router.post('/login', [
-  body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Valid email is required'),
   body('password')
     .notEmpty()
-    .withMessage('Password is required')
+    .withMessage('Password is required'),
+  // Custom validation to check either phone or email
+  body().custom((value, { req }) => {
+    if (!req.body.phone && !req.body.email) {
+      throw new Error('Phone number or email is required');
+    }
+    // If email is provided, validate it
+    if (req.body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.body.email)) {
+      throw new Error('Valid email is required');
+    }
+    // If phone is provided, validate it
+    if (req.body.phone && !/^\d{10}$/.test(req.body.phone.replace(/\D/g, ''))) {
+      throw new Error('Valid 10-digit phone number is required');
+    }
+    return true;
+  })
 ], AuthController.login);
 
 // @route   GET /api/auth/me

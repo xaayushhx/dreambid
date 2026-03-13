@@ -11,6 +11,15 @@ class User {
     return result.rows[0];
   }
 
+  // Find user by phone
+  static async findByPhone(phone) {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE phone = $1',
+      [phone]
+    );
+    return result.rows[0];
+  }
+
   // Find user by id
   static async findById(id) {
     const result = await pool.query(

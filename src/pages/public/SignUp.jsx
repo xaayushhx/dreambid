@@ -8,7 +8,6 @@ function SignUp() {
   const { register } = useAuth();
   
   const [formData, setFormData] = useState({
-    email: '',
     password: '',
     confirmPassword: '',
     full_name: '',
@@ -21,12 +20,6 @@ function SignUp() {
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
@@ -80,7 +73,6 @@ function SignUp() {
 
     try {
       await register({
-        email: formData.email,
         password: formData.password,
         full_name: formData.full_name,
         phone: formData.phone
@@ -95,7 +87,7 @@ function SignUp() {
       if (error.response?.status === 409) {
         setErrors(prev => ({
           ...prev,
-          email: 'This email is already registered'
+          phone: error.response?.data?.message || 'Registration failed'
         }));
       }
     } finally {
@@ -135,27 +127,6 @@ function SignUp() {
             />
             {errors.full_name && (
               <p className="text-red-400 text-sm mt-1">{errors.full_name}</p>
-            )}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="your@email.com"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-midnight-700 text-white placeholder-text-muted ${
-                errors.email ? 'border-red-500' : 'border-midnight-600'
-              }`}
-            />
-            {errors.email && (
-              <p className="text-red-400 text-sm mt-1">{errors.email}</p>
             )}
           </div>
 

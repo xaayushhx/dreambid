@@ -16,6 +16,8 @@ import activityRoutes from './routes/activity.js';
 import propertyRoutes from './routes/properties.js';
 import enquiryRoutes from './routes/enquiries.js';
 import interestRoutes from './routes/interests.js';
+import blogRoutes from './routes/blogs.js';
+import userRegistrationRoutes from './routes/user-registrations.js';
 
 // Configuration
 const __filename = fileURLToPath(import.meta.url);
@@ -286,6 +288,8 @@ app.use('/api/activity', activityRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/interests', interestRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/user-registrations', userRegistrationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

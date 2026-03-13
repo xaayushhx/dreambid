@@ -55,8 +55,8 @@ function Dashboard() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <div>
+      <div className="mb-8">
+        <div className="mb-4">
           <h1 className="text-3xl font-bold text-text-primary">Dashboard</h1>
           <p className="text-sm text-text-muted mt-1">
             Last updated: {lastRefresh.toLocaleTimeString()}
@@ -66,7 +66,7 @@ function Dashboard() {
           <button
             onClick={handleRefresh}
             disabled={propertiesLoading || enquiriesLoading}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-3 py-1.5 bg-midnight-700 text-text-primary text-sm rounded-md hover:bg-midnight-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-midnight-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -75,7 +75,7 @@ function Dashboard() {
           </button>
           <Link
             to="/admin/properties/new"
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+            className="bg-gold text-midnight-950 px-3 py-1.5 text-sm rounded-md hover:bg-gold/90 transition font-medium"
           >
             Add Property
           </Link>

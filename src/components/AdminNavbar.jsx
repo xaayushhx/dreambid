@@ -42,8 +42,17 @@ function AdminNavbar() {
               <Link to="/admin/properties" className="text-text-nav hover:text-gold transition-colors">
                 Properties
               </Link>
+              <Link to="/admin/featured" className="text-text-nav hover:text-gold transition-colors">
+                Featured
+              </Link>
               <Link to="/admin/enquiries" className="text-text-nav hover:text-gold transition-colors">
                 Enquiries
+              </Link>
+              <Link to="/admin/registrations" className="text-text-nav hover:text-gold transition-colors">
+                Registrations
+              </Link>
+              <Link to="/admin/blogs" className="text-text-nav hover:text-gold transition-colors">
+                Blogs
               </Link>
               <Link to="/admin/users" className="text-text-nav hover:text-gold transition-colors">
                 Users
@@ -115,11 +124,32 @@ function AdminNavbar() {
               Properties
             </Link>
             <Link
+              to="/admin/featured"
+              onClick={closeMenu}
+              className="text-text-nav hover:text-gold hover:bg-midnight-800 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            >
+              Featured
+            </Link>
+            <Link
               to="/admin/enquiries"
               onClick={closeMenu}
               className="text-text-nav hover:text-gold hover:bg-midnight-800 block px-3 py-2 rounded-md text-base font-medium transition-colors"
             >
               Enquiries
+            </Link>
+            <Link
+              to="/admin/registrations"
+              onClick={closeMenu}
+              className="text-text-nav hover:text-gold hover:bg-midnight-800 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            >
+              Registrations
+            </Link>
+            <Link
+              to="/admin/blogs"
+              onClick={closeMenu}
+              className="text-text-nav hover:text-gold hover:bg-midnight-800 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            >
+              Blogs
             </Link>
             <Link
               to="/admin/users"

@@ -1,0 +1,23 @@
+{
+  "appId": "com.dreambid.app",
+  "appName": "DreamBid",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "ios": {
+    "contentInset": "always"
+  },
+  "android": {
+    "windowSoftInputMode": "adjustResize"
+  },
+  "plugins": {
+    "Preferences": {
+      "group": "com.dreambid.app"
+    },
+    "SafeArea": {
+      "enable": true
+    }
+  }
+}

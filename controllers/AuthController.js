@@ -74,12 +74,20 @@ class AuthController {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { email, password } = req.body;
+      const { phone, email, password } = req.body;
 
-      // Find user by email
-      const user = await User.findByEmail(email);
+      // Allow login with either phone or email for backward compatibility
+      let user;
+      if (phone) {
+        user = await User.findByPhone(phone);
+      } else if (email) {
+        user = await User.findByEmail(email);
+      } else {
+        return res.status(400).json({ message: 'Phone number or email is required' });
+      }
+
       if (!user) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+        return res.status(401).json({ message: 'Invalid phone/email or password' });
       }
 
       // Check if user is active
@@ -99,7 +107,7 @@ class AuthController {
           req.ip,
           req.get('user-agent')
         );
-        return res.status(401).json({ message: 'Invalid email or password' });
+        return res.status(401).json({ message: 'Invalid phone/email or password' });
       }
 
       // Generate JWT token
@@ -114,7 +122,7 @@ class AuthController {
         user.id,
         'user_login',
         'authentication',
-        { email },
+        { phone: phone || email },
         req.ip,
         req.get('user-agent')
       );
@@ -126,6 +134,7 @@ class AuthController {
           id: user.id,
           email: user.email,
           full_name: user.full_name,
+          phone: user.phone,
           role: user.role
         }
       });

@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useMutation } from 'react-query';
+import PropertyTypeDropdown from '../../components/PropertyTypeDropdown';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     contactNumber: '',
-    emailId: '',
-    address: '',
     requirements: [
       {
         preferredCity: '',
         budget: '',
-        propertyType: '',
+        propertyType: [],
         requirementType: 'immediate'
       }
     ]
@@ -21,6 +23,20 @@ function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [activeRequirementTab, setActiveRequirementTab] = useState(0);
+
+  // Mutation for submitting registration
+  const registerMutation = useMutation(
+    (data) => api.post('/user-registrations', data),
+    {
+      onSuccess: () => {
+        toast.success('Registration successful! We will contact you soon.');
+        navigate('/');
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
+      }
+    }
+  );
 
   const validateForm = () => {
     const newErrors = {};
@@ -35,12 +51,6 @@ function Register() {
     } else if (!/^\d{10}$/.test(formData.contactNumber.replace(/\s/g, ''))) {
       newErrors.contactNumber = 'Please enter a valid 10-digit contact number';
     }
-    
-    if (!formData.emailId.trim()) {
-      newErrors.emailId = 'Email ID is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailId)) {
-      newErrors.emailId = 'Please enter a valid email address';
-    }
 
     // Requirements Validation
     formData.requirements.forEach((req, index) => {
@@ -50,7 +60,7 @@ function Register() {
       if (!req.budget) {
         newErrors[`budget_${index}`] = 'Budget is required';
       }
-      if (!req.propertyType) {
+      if (!Array.isArray(req.propertyType) || req.propertyType.length === 0) {
         newErrors[`propertyType_${index}`] = 'Property type is required';
       }
     });
@@ -104,7 +114,7 @@ function Register() {
         {
           preferredCity: '',
           budget: '',
-          propertyType: '',
+          propertyType: [],
           requirementType: 'immediate'
         }
       ]
@@ -137,25 +147,7 @@ function Register() {
       return;
     }
 
-    setIsSubmitting(true);
-    
-    try {
-      // TODO: Replace with actual API call
-      console.log('Registration data:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Show success message and redirect
-      alert('Registration successful! We will contact you soon.');
-      navigate('/');
-      
-    } catch (error) {
-      console.error('Registration error:', error);
-      setErrors({ submit: 'Registration failed. Please try again.' });
-    } finally {
-      setIsSubmitting(false);
-    }
+    registerMutation.mutate(formData);
   };
 
   const budgetOptions = [
@@ -242,43 +234,6 @@ function Register() {
                   {errors.contactNumber && (
                     <p className="mt-1 text-xs text-red-400">{errors.contactNumber}</p>
                   )}
-                </div>
-
-                {/* Email ID */}
-                <div>
-                  <label htmlFor="emailId" className="block text-sm font-medium text-text-primary mb-2">
-                    Email ID <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    id="emailId"
-                    name="emailId"
-                    value={formData.emailId}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 text-sm bg-midnight-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 ${
-                      errors.emailId ? 'border-red-500 bg-red-900/20' : 'border-midnight-600'
-                    }`}
-                    placeholder="Enter your email address"
-                  />
-                  {errors.emailId && (
-                    <p className="mt-1 text-xs text-red-400">{errors.emailId}</p>
-                  )}
-                </div>
-
-                {/* Address */}
-                <div className="md:col-span-2">
-                  <label htmlFor="address" className="block text-sm font-medium text-text-primary mb-2">
-                    Address
-                  </label>
-                  <textarea
-                    id="address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="w-full px-4 py-3 text-sm bg-midnight-700 border border-midnight-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 resize-none"
-                    placeholder="Enter your address (optional)"
-                  />
                 </div>
               </div>
             </div>
@@ -380,18 +335,10 @@ function Register() {
                         <label className="block text-sm font-medium text-text-primary mb-2">
                           Property Type <span className="text-red-400">*</span>
                         </label>
-                        <select
+                        <PropertyTypeDropdown
                           value={requirement.propertyType}
-                          onChange={(e) => handleRequirementChange(index, 'propertyType', e.target.value)}
-                          className={`w-full px-4 py-3 text-sm bg-midnight-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 ${
-                            errors[`propertyType_${index}`] ? 'border-red-500 bg-red-900/20' : 'border-midnight-600'
-                          }`}
-                        >
-                          <option value="">Select Property Type</option>
-                          {propertyTypeOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
+                          onChange={(value) => handleRequirementChange(index, 'propertyType', value)}
+                        />
                         {errors[`propertyType_${index}`] && (
                           <p className="mt-1 text-xs text-red-400">{errors[`propertyType_${index}`]}</p>
                         )}
@@ -456,10 +403,10 @@ function Register() {
                 <div className="space-y-3">
                   <button
                     onClick={handleSubmit}
-                    disabled={isSubmitting || !acceptedTerms}
+                    disabled={registerMutation.isLoading || !acceptedTerms}
                     className="w-full px-6 py-3 bg-gold text-midnight-950 rounded-xl hover:bg-gold/90 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? (
+                    {registerMutation.isLoading ? (
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-4 h-4 border-2 border-midnight-950 border-t-transparent rounded-full animate-spin"></div>
                         Submitting...
@@ -497,36 +444,6 @@ function Register() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Fixed Bottom CTA */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-midnight-800 border-t border-midnight-700 p-4 shadow-lg z-40">
-        <div className="flex items-start gap-3 mb-3">
-          <input
-            type="checkbox"
-            id="terms-mobile"
-            checked={acceptedTerms}
-            onChange={(e) => setAcceptedTerms(e.target.checked)}
-            className="mt-1 w-4 h-4 text-gold border-midnight-600 rounded focus:ring-gold"
-          />
-          <label htmlFor="terms-mobile" className="text-sm text-text-secondary leading-tight">
-            By continuing, you accept the <span className="text-gold font-medium">Terms & Conditions</span> and <span className="text-gold font-medium">Privacy Policy</span>
-          </label>
-        </div>
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting || !acceptedTerms}
-          className="w-full px-6 py-3 bg-gold text-midnight-950 rounded-xl hover:bg-gold/90 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? (
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-midnight-950 border-t-transparent rounded-full animate-spin"></div>
-              Submitting...
-            </div>
-          ) : (
-            'Submit Registration'
-          )}
-        </button>
       </div>
     </div>
   );

@@ -116,11 +116,35 @@ CREATE TABLE IF NOT EXISTS user_activity (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create Blogs table
+CREATE TABLE IF NOT EXISTS blogs (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(500) NOT NULL,
+  excerpt TEXT NOT NULL,
+  content TEXT NOT NULL,
+  category VARCHAR(100) NOT NULL CHECK (category IN ('buying', 'investment', 'market', 'legal')),
+  author VARCHAR(255) NOT NULL,
+  image TEXT,
+  read_time VARCHAR(50),
+  status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  views_count INTEGER DEFAULT 0,
+  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_featured BOOLEAN DEFAULT false
+);
+
 -- Create indexes for user_activity table for performance
 CREATE INDEX idx_user_activity_user_id ON user_activity(user_id);
 CREATE INDEX idx_user_activity_created_at ON user_activity(created_at);
 CREATE INDEX idx_user_activity_action ON user_activity(action);
 CREATE INDEX idx_user_activity_user_date ON user_activity(user_id, created_at DESC);
+
+-- Create indexes for blogs table for performance
+CREATE INDEX idx_blogs_status ON blogs(status);
+CREATE INDEX idx_blogs_category ON blogs(category);
+CREATE INDEX idx_blogs_created_at ON blogs(created_at DESC);
+CREATE INDEX idx_blogs_created_by ON blogs(created_by);
 
 -- Insert a sample admin user (password: admin123 - hashed with bcrypt)
 -- Note: Always use bcrypt hashing for passwords in production

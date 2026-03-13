@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { propertiesAPI } from '../../services/api';
 import { getImageUrl } from '../../utils/imageUrl';
+import { formatNumber } from '../../utils/formatNumber';
 import toast from 'react-hot-toast';
 
 function PropertyForm() {
@@ -29,12 +30,9 @@ function PropertyForm() {
     latitude: '',
     longitude: '',
     area_sqft: '',
-    bedrooms: '',
-    bathrooms: '',
     floors: '',
     reserve_price: '',
     auction_date: '',
-    auction_time: '',
     auction_status: 'upcoming',
     is_featured: false,
     estimated_market_value: '',
@@ -64,12 +62,9 @@ function PropertyForm() {
         latitude: prop.latitude || '',
         longitude: prop.longitude || '',
         area_sqft: prop.area_sqft || '',
-        bedrooms: prop.bedrooms || '',
-        bathrooms: prop.bathrooms || '',
         floors: prop.floors || '',
         reserve_price: prop.reserve_price || '',
         auction_date: prop.auction_date ? prop.auction_date.split('T')[0] : '',
-        auction_time: prop.auction_time || '',
         auction_status: prop.auction_status || 'upcoming',
         is_featured: prop.is_featured || false,
         estimated_market_value: prop.estimated_market_value || '',
@@ -164,18 +159,18 @@ function PropertyForm() {
   };
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+    <div className="min-h-screen bg-gradient-to-b from-midnight-900 to-midnight-950 p-6">
+      <h1 className="text-3xl font-bold text-white mb-8">
         {isEdit ? 'Edit Property' : 'Add New Property'}
       </h1>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="bg-midnight-800 rounded-lg shadow-lg border border-midnight-700 p-6 space-y-6">
         {/* Basic Information */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
+          <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Title *
               </label>
               <input
@@ -184,18 +179,18 @@ function PropertyForm() {
                 required
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Property Type
               </label>
               <select
                 name="property_type"
                 value={formData.property_type}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               >
                 <option value="">Select Type</option>
                 <option value="house">House</option>
@@ -206,7 +201,7 @@ function PropertyForm() {
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Description
               </label>
               <textarea
@@ -214,7 +209,7 @@ function PropertyForm() {
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
           </div>
@@ -222,10 +217,10 @@ function PropertyForm() {
 
         {/* Location */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Location</h2>
+          <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Location</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Address *
               </label>
               <input
@@ -234,11 +229,11 @@ function PropertyForm() {
                 required
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 City *
               </label>
               <input
@@ -247,11 +242,11 @@ function PropertyForm() {
                 required
                 value={formData.city}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 State
               </label>
               <input
@@ -259,11 +254,11 @@ function PropertyForm() {
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Zip Code
               </label>
               <input
@@ -271,11 +266,11 @@ function PropertyForm() {
                 name="zip_code"
                 value={formData.zip_code}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Latitude
               </label>
               <input
@@ -284,11 +279,11 @@ function PropertyForm() {
                 name="latitude"
                 value={formData.latitude}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Longitude
               </label>
               <input
@@ -297,7 +292,7 @@ function PropertyForm() {
                 name="longitude"
                 value={formData.longitude}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
           </div>
@@ -305,10 +300,10 @@ function PropertyForm() {
 
         {/* Property Details */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Property Details</h2>
+          <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Property Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Area (sq ft)
               </label>
               <input
@@ -316,11 +311,11 @@ function PropertyForm() {
                 name="area_sqft"
                 value={formData.area_sqft}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Built-Up Area (sq ft)
               </label>
               <input
@@ -329,11 +324,11 @@ function PropertyForm() {
                 name="built_up_area"
                 value={formData.built_up_area}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Total Area (sq ft)
               </label>
               <input
@@ -342,35 +337,11 @@ function PropertyForm() {
                 name="total_area"
                 value={formData.total_area}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bedrooms
-              </label>
-              <input
-                type="number"
-                name="bedrooms"
-                value={formData.bedrooms}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bathrooms
-              </label>
-              <input
-                type="number"
-                name="bathrooms"
-                value={formData.bathrooms}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Floors
               </label>
               <input
@@ -378,7 +349,7 @@ function PropertyForm() {
                 name="floors"
                 value={formData.floors}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
           </div>
@@ -386,10 +357,10 @@ function PropertyForm() {
 
         {/* Auction Details */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Auction Details</h2>
+          <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Auction Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Reserve Price (₹) *
               </label>
               <input
@@ -398,11 +369,11 @@ function PropertyForm() {
                 required
                 value={formData.reserve_price}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Estimated Market Value (₹)
               </label>
               <input
@@ -411,11 +382,11 @@ function PropertyForm() {
                 name="estimated_market_value"
                 value={formData.estimated_market_value}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 EMD - Earnest Money Deposit (₹)
               </label>
               <input
@@ -424,11 +395,11 @@ function PropertyForm() {
                 name="emd"
                 value={formData.emd}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Auction Date
               </label>
               <input
@@ -436,23 +407,11 @@ function PropertyForm() {
                 name="auction_date"
                 value={formData.auction_date}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Auction Time
-              </label>
-              <input
-                type="time"
-                name="auction_time"
-                value={formData.auction_time}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Application End Date
               </label>
               <input
@@ -460,18 +419,18 @@ function PropertyForm() {
                 name="application_end_date"
                 value={formData.application_end_date}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Possession Type
               </label>
               <select
                 name="possession_type"
                 value={formData.possession_type}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               >
                 <option value="">Select Possession Type</option>
                 <option value="Physical">Physical Possession</option>
@@ -480,14 +439,14 @@ function PropertyForm() {
             </div>
             {isEdit && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-primary mb-1">
                   Status
                 </label>
                 <select
                   name="auction_status"
                   value={formData.auction_status}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
                 >
                   <option value="upcoming">Upcoming</option>
                   <option value="active">Active</option>
@@ -503,9 +462,9 @@ function PropertyForm() {
                 name="is_featured"
                 checked={formData.is_featured}
                 onChange={handleChange}
-                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                className="h-4 w-4 text-red-600 focus:ring-gold border-midnight-600 rounded"
               />
-              <label className="ml-2 block text-sm text-gray-700">
+              <label className="ml-2 block text-sm text-text-primary">
                 Featured Property
               </label>
             </div>
@@ -514,10 +473,10 @@ function PropertyForm() {
 
         {/* Images */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Images</h2>
+          <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Images</h2>
           {existingImages.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">Existing Images:</p>
+              <p className="text-sm text-text-secondary mb-2">Existing Images:</p>
               <div className="flex flex-wrap gap-2">
                 {existingImages.map((img, idx) => (
                   <img
@@ -536,39 +495,39 @@ function PropertyForm() {
               accept="image/*"
               multiple
               onChange={handleImageChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
             />
             <div className="mt-2 flex justify-between text-sm">
-              <p className="text-gray-500">First image will be used as cover image</p>
-              <p className="text-gray-600 font-medium">Images selected: {images.length} / 20</p>
+              <p className="text-text-muted">First image will be used as cover image</p>
+              <p className="text-text-primary font-medium">Images selected: {images.length} / 20</p>
             </div>
           </div>
         </div>
 
         {/* PDF */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Property Brochure (PDF)</h2>
+          <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Property Brochure (PDF)</h2>
           <input
             type="file"
             accept=".pdf"
             onChange={handlePdfChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
           />
         </div>
 
         {/* Submit Buttons */}
-        <div className="flex justify-end gap-4 pt-4 border-t">
+        <div className="flex justify-end gap-4 pt-4 border-t border-midnight-700">
           <button
             type="button"
             onClick={() => navigate('/admin/properties')}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 border border-midnight-600 rounded-md text-text-primary hover:bg-midnight-700 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={createMutation.isLoading || updateMutation.isLoading}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+            className="px-4 py-2 bg-gold text-midnight-950 rounded-md hover:bg-gold/90 disabled:opacity-50 font-medium transition-colors"
           >
             {createMutation.isLoading || updateMutation.isLoading
               ? 'Saving...'

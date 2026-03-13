@@ -92,7 +92,8 @@ router.get('/', [
       max_price,
       sort_by,
       page = 1,
-      limit = 20
+      limit = 20,
+      is_featured
     } = req.query;
 
     // By default, exclude expired properties unless explicitly requested
@@ -101,6 +102,11 @@ router.get('/', [
     const params = [];
     let paramCount = 0;
     
+    // Handle featured filter
+    if (is_featured === 'true') {
+      query += ` AND is_featured = true`;
+    }
+
     // Handle status filter
     if (status === '') {
       // Empty string means "show all including expired" (for admin dashboard)
@@ -546,5 +552,43 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// @route   PUT /api/properties/:id/toggle-featured
+// @desc    Toggle featured status of a property
+// @access  Admin/Staff
+router.put('/:id/toggle-featured', authenticate, authorize('admin', 'staff'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if property exists
+    const checkResult = await pool.query('SELECT is_featured FROM properties WHERE id = $1', [id]);
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
+    const currentFeatured = checkResult.rows[0].is_featured;
+    const newFeatured = !currentFeatured;
+
+    // Update featured status
+    const result = await pool.query(
+      'UPDATE properties SET is_featured = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [newFeatured, id]
+    );
+
+    res.json({
+      message: `Property ${newFeatured ? 'added to' : 'removed from'} featured`,
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Toggle featured error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// @route   GET /api/properties?is_featured=true
+// @desc    Get featured properties
+// @access  Public
+// (This filtering is handled in the existing GET route)
+
 export default router;
+
 

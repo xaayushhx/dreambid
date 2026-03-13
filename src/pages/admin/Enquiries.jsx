@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 
 function Enquiries() {
   const [statusFilter, setStatusFilter] = useState('');
+  const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery(
@@ -17,9 +18,14 @@ function Enquiries() {
     {
       onSuccess: () => {
         toast.success('Enquiry status updated');
-        // Invalidate all enquiry-related queries
         queryClient.invalidateQueries('enquiries');
         queryClient.invalidateQueries(['enquiries']);
+        if (selectedEnquiry) {
+          setSelectedEnquiry({
+            ...selectedEnquiry,
+            status: selectedEnquiry.status
+          });
+        }
       },
       onError: (error) => {
         toast.error(error.response?.data?.message || 'Failed to update status');
@@ -35,130 +41,178 @@ function Enquiries() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'new': return 'bg-yellow-100 text-yellow-800';
-      case 'contacted': return 'bg-red-100 text-red-800';
-      case 'resolved': return 'bg-green-100 text-green-800';
-      case 'closed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'new': return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
+      case 'contacted': return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
+      case 'resolved': return 'bg-green-500/20 text-green-300 border border-green-500/30';
+      case 'closed': return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+      default: return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading enquiries...</div>
+        <div className="text-text-secondary">Loading enquiries...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">Error loading enquiries: {error.message}</p>
+      <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4">
+        <p className="text-red-300">Error loading enquiries: {error.message}</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Enquiries</h1>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Left Column - Enquiries List */}
+      <div className="lg:col-span-2">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-text-primary mb-4">Enquiries</h1>
+          
+          {/* Filters */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 bg-midnight-700 border border-midnight-600 text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+          >
+            <option value="">All Status</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
 
-      {/* Filters */}
-      <div className="mb-6">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-        >
-          <option value="">All Status</option>
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="resolved">Resolved</option>
-          <option value="closed">Closed</option>
-        </select>
+        {/* Enquiries List */}
+        <div className="space-y-3">
+          {enquiries.length === 0 ? (
+            <div className="bg-midnight-900 border border-midnight-700 rounded-lg p-8 text-center text-text-secondary">
+              <p>No enquiries found.</p>
+            </div>
+          ) : (
+            enquiries.map((enquiry) => (
+              <div
+                key={enquiry.id}
+                onClick={() => setSelectedEnquiry(enquiry)}
+                className={`bg-midnight-900 border border-midnight-700 rounded-lg p-4 cursor-pointer transition-all hover:border-gold ${
+                  selectedEnquiry?.id === enquiry.id ? 'border-gold ring-2 ring-gold/20' : ''
+                }`}
+              >
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-text-primary truncate">{enquiry.name}</h3>
+                    <p className="text-sm text-text-secondary truncate">{enquiry.email}</p>
+                    <p className="text-sm text-text-secondary">{enquiry.phone}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(enquiry.status)}`}>
+                      {enquiry.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-midnight-700">
+                  <p className="text-sm text-text-primary font-medium truncate">{enquiry.property_title}</p>
+                  <p className="text-xs text-text-secondary mt-1">
+                    {new Date(enquiry.created_at).toLocaleDateString()} at {new Date(enquiry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
-      {/* Enquiries List */}
-      <div className="bg-midnight-900 border border-midnight-700 rounded-lg shadow overflow-hidden">
-        {enquiries.length === 0 ? (
-          <div className="p-8 text-center text-text-muted">
-            <p>No enquiries found.</p>
+      {/* Right Column - Details Panel */}
+      {selectedEnquiry && (
+        <div className="lg:col-span-1">
+          <div className="bg-midnight-900 border border-midnight-700 rounded-lg p-6 sticky top-8">
+            <h2 className="text-xl font-bold text-text-primary mb-6">Enquiry Details</h2>
+
+            <div className="space-y-6">
+              {/* Contact Information */}
+              <div>
+                <h3 className="text-sm font-semibold text-gold uppercase tracking-wide mb-3">Contact Information</h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-text-secondary">Name</p>
+                    <p className="text-sm text-text-primary font-medium">{selectedEnquiry.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-text-secondary">Email</p>
+                    <p className="text-sm text-text-primary font-medium break-all">{selectedEnquiry.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-text-secondary">Phone</p>
+                    <p className="text-sm text-text-primary font-medium">{selectedEnquiry.phone}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Property Information */}
+              <div className="pt-4 border-t border-midnight-700">
+                <h3 className="text-sm font-semibold text-gold uppercase tracking-wide mb-3">Property Information</h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-text-secondary">Property</p>
+                    <p className="text-sm text-text-primary font-medium">{selectedEnquiry.property_title}</p>
+                  </div>
+                  {selectedEnquiry.property_address && (
+                    <div>
+                      <p className="text-xs text-text-secondary">Address</p>
+                      <p className="text-sm text-text-primary">{selectedEnquiry.property_address}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-text-secondary">Type</p>
+                    <p className="text-sm text-text-primary font-medium">{selectedEnquiry.enquiry_type || 'General Inquiry'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message */}
+              {selectedEnquiry.message && (
+                <div className="pt-4 border-t border-midnight-700">
+                  <h3 className="text-sm font-semibold text-gold uppercase tracking-wide mb-3">Message</h3>
+                  <p className="text-sm text-text-primary bg-midnight-800 rounded-lg p-3">
+                    {selectedEnquiry.message}
+                  </p>
+                </div>
+              )}
+
+              {/* Status & Actions */}
+              <div className="pt-4 border-t border-midnight-700">
+                <h3 className="text-sm font-semibold text-gold uppercase tracking-wide mb-3">Status</h3>
+                <select
+                  value={selectedEnquiry.status}
+                  onChange={(e) => {
+                    handleStatusChange(selectedEnquiry.id, e.target.value);
+                    setSelectedEnquiry({ ...selectedEnquiry, status: e.target.value });
+                  }}
+                  className="w-full px-3 py-2 bg-midnight-800 border border-midnight-600 text-text-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-gold text-sm"
+                >
+                  <option value="new">New</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+
+              {/* Metadata */}
+              <div className="pt-4 border-t border-midnight-700">
+                <p className="text-xs text-text-secondary">
+                  Created: {new Date(selectedEnquiry.created_at).toLocaleDateString()} {new Date(selectedEnquiry.created_at).toLocaleTimeString()}
+                </p>
+                <p className="text-xs text-text-secondary mt-1">
+                  ID: {selectedEnquiry.id}
+                </p>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-midnight-700">
-              <thead className="bg-midnight-800">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    Contact Info
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    Property
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    Message
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-midnight-900 divide-y divide-midnight-700">
-                {enquiries.map((enquiry) => (
-                  <tr key={enquiry.id} className="hover:bg-midnight-800 transition\">
-                    <td className="px-6 py-4 whitespace-nowrap\">
-                      <div className="text-sm font-medium text-text-primary\">{enquiry.name}</div>
-                      <div className="text-sm text-text-secondary\">{enquiry.email}</div>
-                      <div className="text-sm text-gray-500">{enquiry.phone}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{enquiry.property_title}</div>
-                      <div className="text-sm text-gray-500">{enquiry.property_address}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate">
-                        {enquiry.message || 'No message'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {enquiry.enquiry_type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(enquiry.status)}`}>
-                        {enquiry.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(enquiry.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <select
-                        value={enquiry.status}
-                        onChange={(e) => handleStatusChange(enquiry.id, e.target.value)}
-                        className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      >
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

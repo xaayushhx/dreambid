@@ -30,7 +30,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-gradient-to-b from-midnight-950 to-midnight-900 backdrop-blur-md shadow-dark-elevation sticky top-0 z-50 border-b border-midnight-700">
+    <nav className="bg-gradient-to-b from-midnight-950 to-midnight-900 backdrop-blur-md shadow-dark-elevation sticky top-0 z-50 border-b border-midnight-700 pt-safe">
       <div className="max-w-7xl mx-auto px-4 md:px-16">
         <div className="flex justify-between items-center py-4 md:py-8">
           {/* Logo */}
@@ -68,6 +68,9 @@ function Navbar() {
                 </a>
                 <Link to="/contact" className="block px-4 py-3 text-text-nav hover:text-gold hover:bg-midnight-700 transition-colors">
                   Contact Us
+                </Link>
+                <Link to="/blogs" className="block px-4 py-3 text-text-nav hover:text-gold hover:bg-midnight-700 transition-colors">
+                  Blogs
                 </Link>
                 <Link to="/" className="block px-4 py-3 text-text-nav hover:text-gold hover:bg-midnight-700 transition-colors last:rounded-b-lg">
                   Home
@@ -188,6 +191,13 @@ function Navbar() {
                 className="text-text-nav hover:text-gold hover:bg-midnight-800 block px-4 py-3 rounded-btn text-base font-medium transition-colors"
               >
                 Contact-Us
+              </Link>
+              <Link
+                to="/blogs"
+                onClick={() => setMenuOpen(false)}
+                className="text-text-nav hover:text-gold hover:bg-midnight-800 block px-4 py-3 rounded-btn text-base font-medium transition-colors"
+              >
+                Blogs
               </Link>
               {isAuthenticated && user ? (
                 <>

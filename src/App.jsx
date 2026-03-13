@@ -21,17 +21,25 @@ import UserDashboard from './pages/public/Dashboard';
 import UserProfile from './pages/public/Profile';
 import UserSettings from './pages/public/Settings';
 import Shortlisted from './pages/public/Shortlisted';
+import Blogs from './pages/public/Blogs';
+import BlogDetail from './pages/public/BlogDetail';
 
 // Admin Pages
 import Dashboard from './pages/admin/Dashboard';
 import AdminProperties from './pages/admin/AdminProperties';
 import PropertyForm from './pages/admin/PropertyForm';
+import FeaturedProperties from './pages/admin/FeaturedProperties';
 import Enquiries from './pages/admin/Enquiries';
 import Users from './pages/admin/Users';
+import AdminBlogs from './pages/admin/AdminBlogs';
+import UserRegistrations from './pages/admin/UserRegistrations';
 
 // Protected Route Components
 import ProtectedRoute from './components/ProtectedRoute';
 import UserProtectedRoute from './components/UserProtectedRoute';
+
+// Floating Components
+import WhatsAppFloat from './components/WhatsAppFloat';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -50,6 +58,7 @@ function App() {
         <ShortlistProvider>
           <Router>
             <div className="min-h-screen bg-gray-50">
+              <WhatsAppFloat />
               <Routes>
               {/* Public Routes */}
               <Route path="/" element={<PublicLayout />}>
@@ -57,6 +66,8 @@ function App() {
                 <Route path="properties" element={<Properties />} />
                 <Route path="properties/:id" element={<PropertyDetail />} />
                 <Route path="shortlisted" element={<Shortlisted />} />
+                <Route path="blogs" element={<Blogs />} />
+                <Route path="blogs/:id" element={<BlogDetail />} />
                 <Route path="register" element={<Register />} />
                 <Route path="contact" element={<Contact />} />
                 <Route path="signup" element={<SignUp />} />
@@ -82,8 +93,11 @@ function App() {
                 <Route path="properties" element={<AdminProperties />} />
                 <Route path="properties/new" element={<PropertyForm />} />
                 <Route path="properties/:id/edit" element={<PropertyForm />} />
+                <Route path="featured" element={<FeaturedProperties />} />
                 <Route path="enquiries" element={<Enquiries />} />
                 <Route path="users" element={<Users />} />
+                <Route path="registrations" element={<UserRegistrations />} />
+                <Route path="blogs" element={<AdminBlogs />} />
               </Route>
 
               {/* Catch all route */}
