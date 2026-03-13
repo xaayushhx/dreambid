@@ -90,94 +90,48 @@ app.use((err, req, res, next) => {
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Initialize database on startup
+// Initialize database (non-blocking for serverless)
 async function initializeDatabase() {
   let retries = 0;
-  const maxRetries = 3;
+  const maxRetries = 2;
   
   while (retries < maxRetries) {
     try {
-      console.log('🔄 Checking/initializing database...');
+      console.log('🔄 Checking database...');
       
       const tableCheck = await pool.query(
         "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'users')"
       );
       
       if (!tableCheck.rows[0].exists) {
-        console.log('📝 Creating database tables...');
-        const schemaSql = fs.readFileSync(path.join(__dirname, '../database-complete.sql'), 'utf-8');
-        const schemaStatements = schemaSql
-          .split(';')
-          .map(stmt => stmt.trim())
-          .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-        
-        for (const statement of schemaStatements) {
-          try {
-            await pool.query(statement);
-          } catch (err) {
-            if (!err.message.includes('already exists') && !err.message.includes('duplicate key')) {
-              throw err;
-            }
-          }
-        }
-        console.log('✅ Schema created');
-      } else {
-        console.log('✅ Database tables already exist');
+        console.log('📝 Database tables need to be created');
+        // Skip auto-creation in serverless - should be done manually
+        return;
       }
       
-      // Ensure admin user exists
-      try {
-        const adminPasswordHash = '$2a$10$.BuPpcfY36q7Uypbus.9/eCszDXNNj0nPgAn9qHVrITIkN9qX3H5a';
-        await pool.query(
-          `INSERT INTO users (email, password_hash, full_name, role, is_active)
-           VALUES ('admin@dreambid.com', $1, 'Admin User', 'admin', true)
-           ON CONFLICT (email) DO UPDATE SET password_hash = $1`
-        , [adminPasswordHash]);
-        console.log('✅ Admin user verified');
-      } catch (err) {
-        console.log('ℹ️  Admin user setup:', err.message.split('\n')[0]);
-      }
-      
+      console.log('✅ Database tables exist');
       return;
     } catch (error) {
       retries++;
-      console.error(`❌ Database initialization error (attempt ${retries}/${maxRetries}):`, error.message);
+      console.error(`❌ Database check error (attempt ${retries}/${maxRetries}):`, error.message);
       
       if (retries < maxRetries) {
-        console.log(`⏳ Retrying in 2 seconds...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
   }
+  
+  console.error('⚠️  Could not verify database - continuing anyway');
 }
 
-// Initialize on first request
+// Initialize on first request (async, non-blocking)
 let initialized = false;
-let initPromise = null;
 
-const initHandler = async () => {
-  if (initialized) return;
-  if (initPromise) return initPromise;
-  
-  initPromise = (async () => {
-    try {
-      await initializeDatabase();
-      CleanupService.initSchedules();
-      initialized = true;
-    } catch (error) {
-      console.error('Initialization error:', error);
-      // Continue anyway - some features may work without full initialization
-    }
-  })();
-  
-  return initPromise;
-};
-
-app.use(async (req, res, next) => {
-  try {
-    await initHandler();
-  } catch (error) {
-    console.error('Init middleware error:', error);
+app.use((req, res, next) => {
+  // Start initialization in background if not done
+  if (!initialized) {
+    initialized = true;
+    initializeDatabase().catch(err => console.error('Init error:', err));
   }
   next();
 });
@@ -192,9 +146,13 @@ app.use('/api/interests', interestRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/user-registrations', userRegistrationRoutes);
 
-// Health check
+// Health check endpoint - respond immediately without DB
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV 
+  });
 });
 
 // Error handling middleware
