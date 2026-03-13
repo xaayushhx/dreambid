@@ -2,26 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import serverless from 'serverless-http';
 
-// Minimal imports to avoid errors
-let authRoutes, userRoutes, activityRoutes, propertyRoutes, enquiryRoutes, interestRoutes, blogRoutes, userRegistrationRoutes;
-
-try {
-  const routes = await Promise.all([
-    import('../routes/auth.js').then(m => m.default),
-    import('../routes/user.js').then(m => m.default),
-    import('../routes/activity.js').then(m => m.default),
-    import('../routes/properties.js').then(m => m.default),
-    import('../routes/enquiries.js').then(m => m.default),
-    import('../routes/interests.js').then(m => m.default),
-    import('../routes/blogs.js').then(m => m.default),
-    import('../routes/user-registrations.js').then(m => m.default),
-  ]);
-  [authRoutes, userRoutes, activityRoutes, propertyRoutes, enquiryRoutes, interestRoutes, blogRoutes, userRegistrationRoutes] = routes;
-} catch (err) {
-  console.error('Route import error:', err);
-}
-
-// Configuration
 const app = express();
 
 // CORS Configuration
@@ -55,27 +35,42 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Initialize on first request (async, non-blocking)
-let initialized = false;
+// Load routes dynamically
+async function setupRoutes() {
+  try {
+    const [authRoutes, userRoutes, activityRoutes, propertyRoutes, enquiryRoutes, interestRoutes, blogRoutes, userRegistrationRoutes] = await Promise.all([
+      import('../routes/auth.js').then(m => m.default),
+      import('../routes/user.js').then(m => m.default),
+      import('../routes/activity.js').then(m => m.default),
+      import('../routes/properties.js').then(m => m.default),
+      import('../routes/enquiries.js').then(m => m.default),
+      import('../routes/interests.js').then(m => m.default),
+      import('../routes/blogs.js').then(m => m.default),
+      import('../routes/user-registrations.js').then(m => m.default),
+    ]);
+    
+    app.use('/api/auth', authRoutes);
+    app.use('/api/user', userRoutes);
+    app.use('/api/activity', activityRoutes);
+    app.use('/api/properties', propertyRoutes);
+    app.use('/api/enquiries', enquiryRoutes);
+    app.use('/api/interests', interestRoutes);
+    app.use('/api/blogs', blogRoutes);
+    app.use('/api/user-registrations', userRegistrationRoutes);
+  } catch (err) {
+    console.error('Route import error:', err);
+  }
+}
 
+// Initialize routes on first request
+let routesLoaded = false;
 app.use((req, res, next) => {
-  // Start initialization in background if not done
-  if (!initialized) {
-    initialized = true;
-    console.log('Initialization started in background');
+  if (!routesLoaded) {
+    routesLoaded = true;
+    setupRoutes().catch(err => console.error('Setup routes error:', err));
   }
   next();
 });
-
-// API Routes - load only if available
-if (authRoutes) app.use('/api/auth', authRoutes);
-if (userRoutes) app.use('/api/user', userRoutes);
-if (activityRoutes) app.use('/api/activity', activityRoutes);
-if (propertyRoutes) app.use('/api/properties', propertyRoutes);
-if (enquiryRoutes) app.use('/api/enquiries', enquiryRoutes);
-if (interestRoutes) app.use('/api/interests', interestRoutes);
-if (blogRoutes) app.use('/api/blogs', blogRoutes);
-if (userRegistrationRoutes) app.use('/api/user-registrations', userRegistrationRoutes);
 
 // Health check endpoint - respond immediately without DB
 app.get('/api/health', (req, res) => {
