@@ -16,15 +16,12 @@ class AuthController {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { email, password, full_name, phone } = req.body;
+      const { password, full_name, phone } = req.body;
 
-      // Check if user exists by email
-      const existingUser = await User.findByEmail(email);
-      if (existingUser) {
-        return res.status(409).json({ message: 'Email already registered' });
-      }
+      // Auto-generate email from phone number
+      const email = `user_${phone}@dreambid.com`;
 
-      // Check if phone number is already registered (if provided)
+      // Check if phone number is already registered
       if (phone) {
         const existingPhone = await User.findByPhone(phone);
         if (existingPhone) {
@@ -47,7 +44,7 @@ class AuthController {
         user.id,
         'user_registered',
         'authentication',
-        { email, full_name },
+        { phone, full_name },
         req.ip,
         req.get('user-agent')
       );
@@ -57,24 +54,19 @@ class AuthController {
         token,
         user: {
           id: user.id,
-          email: user.email,
-          full_name: user.full_name,
           phone: user.phone,
+          full_name: user.full_name,
           role: user.role
         }
       });
     } catch (error) {
       console.error('Register error:', error);
       
-      if (error.message === 'Email already exists') {
-        return res.status(409).json({ message: 'Email already registered' });
-      }
-
       // Handle unique constraint violations from database
       if (error.code === '23505') {
-        if (error.constraint === 'users_email_key') {
-          return res.status(409).json({ message: 'Email already registered' });
-        } else if (error.constraint === 'users_phone_key') {
+        if (error.constraint === 'users_phone_key') {
+          return res.status(409).json({ message: 'Phone number already registered' });
+        } else if (error.constraint === 'users_email_key') {
           return res.status(409).json({ message: 'Phone number already registered' });
         }
       }

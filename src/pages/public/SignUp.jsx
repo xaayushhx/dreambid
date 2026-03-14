@@ -21,6 +21,12 @@ function SignUp() {
   const validateForm = () => {
     const newErrors = {};
 
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(formData.phone.replace(/\s/g, ''))) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    }
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
@@ -35,10 +41,6 @@ function SignUp() {
 
     if (!formData.full_name.trim()) {
       newErrors.full_name = 'Full name is required';
-    }
-
-    if (formData.phone && !/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
     }
 
     setErrors(newErrors);
@@ -73,9 +75,9 @@ function SignUp() {
 
     try {
       await register({
+        phone: formData.phone,
         password: formData.password,
-        full_name: formData.full_name,
-        phone: formData.phone
+        full_name: formData.full_name
       });
 
       toast.success('Account created successfully!');
@@ -130,10 +132,10 @@ function SignUp() {
             )}
           </div>
 
-          {/* Phone (Optional) */}
+          {/* Phone */}
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-text-primary mb-1">
-              Phone Number <span className="text-text-muted">(Optional)</span>
+              Phone Number
             </label>
             <input
               type="tel"
@@ -141,7 +143,7 @@ function SignUp() {
               name="phone"
               value={formData.phone}
               onChange={handleInputChange}
-              placeholder="+1 (555) 000-0000"
+              placeholder="5551234567"
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gold bg-midnight-700 text-white placeholder-text-muted ${
                 errors.phone ? 'border-red-500' : 'border-midnight-600'
               }`}

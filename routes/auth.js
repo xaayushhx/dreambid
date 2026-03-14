@@ -9,10 +9,12 @@ const router = express.Router();
 // @desc    Register a new user with bcrypt password hashing
 // @access  Public
 router.post('/register', [
-  body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Valid email is required'),
+  body('phone')
+    .notEmpty()
+    .withMessage('Phone number is required')
+    .trim()
+    .matches(/^\d{10}$/)
+    .withMessage('Phone number must be exactly 10 digits'),
   body('password')
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters long'),
@@ -20,11 +22,11 @@ router.post('/register', [
     .trim()
     .notEmpty()
     .withMessage('Full name is required'),
-  body('phone')
+  body('email')
     .optional({ checkFalsy: true })
-    .trim()
-    .matches(/^\d{10}$/)
-    .withMessage('Phone number must be exactly 10 digits')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Valid email is required')
 ], AuthController.register);
 
 // @route   POST /api/auth/login
