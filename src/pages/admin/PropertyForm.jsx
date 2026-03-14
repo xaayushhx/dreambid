@@ -33,7 +33,7 @@ function PropertyForm() {
     floors: '',
     reserve_price: '',
     auction_date: '',
-    auction_status: 'upcoming',
+    status: 'upcoming',
     is_featured: false,
     estimated_market_value: '',
     built_up_area: '',
@@ -65,7 +65,7 @@ function PropertyForm() {
         floors: prop.floors || '',
         reserve_price: prop.reserve_price || '',
         auction_date: prop.auction_date ? prop.auction_date.split('T')[0] : '',
-        auction_status: prop.auction_status || 'upcoming',
+        status: prop.status || 'upcoming',
         is_featured: prop.is_featured || false,
         estimated_market_value: prop.estimated_market_value || '',
         built_up_area: prop.built_up_area || '',
@@ -443,8 +443,8 @@ function PropertyForm() {
                   Status
                 </label>
                 <select
-                  name="auction_status"
-                  value={formData.auction_status}
+                  name="status"
+                  value={formData.status}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
                 >

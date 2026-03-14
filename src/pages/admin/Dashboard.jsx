@@ -36,9 +36,9 @@ function Dashboard() {
 
   const stats = {
     totalProperties: properties.length,
-    activeAuctions: properties.filter(p => p.auction_status === 'active').length,
-    upcomingAuctions: properties.filter(p => p.auction_status === 'upcoming').length,
-    expiredAuctions: properties.filter(p => p.auction_status === 'expired').length,
+    activeAuctions: properties.filter(p => p.status === 'active').length,
+    upcomingAuctions: properties.filter(p => p.status === 'upcoming').length,
+    expiredAuctions: properties.filter(p => p.status === 'expired').length,
     newEnquiries: enquiries.filter(e => e.status === 'new').length,
     totalEnquiries: enquiries.length,
     totalViews: properties.reduce((sum, p) => sum + (p.views_count || 0), 0),

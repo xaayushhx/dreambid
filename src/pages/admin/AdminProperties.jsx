@@ -159,8 +159,8 @@ function Properties() {
                       {new Date(property.auction_date).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(property.auction_status)}`}>
-                        {property.auction_status}
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(property.status)}`}>
+                        {property.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">

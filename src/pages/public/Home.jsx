@@ -618,11 +618,11 @@ function Home() {
                             )}
                             <div className="absolute top-4 left-4">
                               <span className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm ${
-                                property.auction_status === 'active' ? 'bg-status-live/90 text-white' :
-                                property.auction_status === 'upcoming' ? 'bg-gold/90 text-midnight-950' :
+                                property.status === 'active' ? 'bg-status-live/90 text-white' :
+                                property.status === 'upcoming' ? 'bg-gold/90 text-midnight-950' :
                                 'bg-text-secondary/30 text-text-primary'
                               }`}>
-                                {property.auction_status === 'active' ? '🔴 Bidding Live' : property.auction_status.toUpperCase()}
+                                {property.status === 'active' ? '🔴 Bidding Live' : property.status.toUpperCase()}
                               </span>
                             </div>
                             
