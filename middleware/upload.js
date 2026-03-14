@@ -1,15 +1,17 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// For Netlify Functions, use temp directory
+const uploadDir = process.env.UPLOAD_DIR || '/tmp/uploads';
 
-// Ensure uploads directory exists
-const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Ensure uploads directory exists (Netlify provides /tmp)
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (error) {
+  console.warn('Warning: Could not create upload directory:', error.message);
 }
 
 // Configure storage
