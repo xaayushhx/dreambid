@@ -3,11 +3,12 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import pool from '../../config/database.js';
 import bcrypt from 'bcryptjs';
+
+// Load environment
+dotenv.config();
 
 // Import routes
 import authRoutes from '../../routes/auth.js';
@@ -18,11 +19,6 @@ import enquiryRoutes from '../../routes/enquiries.js';
 import interestRoutes from '../../routes/interests.js';
 import blogRoutes from '../../routes/blogs.js';
 import userRegistrationRoutes from '../../routes/user-registrations.js';
-
-// Load environment
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Create Express app
 const app = express();
@@ -86,52 +82,6 @@ app.use((err, req, res, next) => {
   next();
 });
 
-// Initialize admin user on startup
-let adminInitialized = false;
-
-async function initializeAdmin() {
-  if (adminInitialized) return;
-  
-  try {
-    console.log('Initializing admin user...');
-    
-    // Hash password: admin123
-    const password = 'admin123';
-    const passwordHash = await bcrypt.hash(password, 10);
-    
-    // Create or update admin user by phone
-    const result = await pool.query(`
-      INSERT INTO users (email, password_hash, full_name, phone, role, is_active)
-      VALUES ('admin@dreambid.com', $1, 'Admin User', '1234567890', 'admin', true)
-      ON CONFLICT (email) DO UPDATE SET 
-        password_hash = $1,
-        phone = '1234567890',
-        role = 'admin',
-        is_active = true
-      RETURNING id, phone;
-    `, [passwordHash]);
-    
-    if (result.rows.length > 0) {
-      console.log('✅ Admin user ready. Phone:', result.rows[0].phone);
-      adminInitialized = true;
-    }
-  } catch (error) {
-    console.error('Admin initialization error:', error.message);
-  }
-}
-
-// Initialize admin on first request
-app.use(async (req, res, next) => {
-  if (!adminInitialized) {
-    try {
-      await initializeAdmin();
-    } catch (error) {
-      console.error('Failed to initialize admin:', error.message);
-    }
-  }
-  next();
-});
-
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
@@ -147,8 +97,7 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    message: 'DreamBid API running on Netlify Functions',
-    adminReady: adminInitialized
+    message: 'DreamBid API running on Netlify Functions'
   });
 });
 

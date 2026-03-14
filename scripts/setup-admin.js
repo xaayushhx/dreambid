@@ -11,7 +11,8 @@ async function setupAdmin() {
     console.log('Setting up admin user...');
     
     // Hash the password
-    const password = 'admin123';
+    const password = process.env.ADMIN_PASSWORD || 'admin123';
+    const adminPhone = process.env.ADMIN_PHONE || '1234567890';
     const passwordHash = await bcrypt.hash(password, 10);
     
     // First, check if users table exists
@@ -24,21 +25,22 @@ async function setupAdmin() {
       process.exit(1);
     }
     
-    // Upsert admin user
+    // Upsert admin user by phone
     const result = await pool.query(`
-      INSERT INTO users (email, password_hash, full_name, role, is_active, created_at)
-      VALUES ('admin@dreambid.com', $1, 'Admin User', 'admin', true, NOW())
+      INSERT INTO users (email, password_hash, full_name, phone, role, is_active, created_at)
+      VALUES ('admin@dreambid.com', $1, 'Admin User', $2, 'admin', true, NOW())
       ON CONFLICT (email) DO UPDATE SET 
         password_hash = $1,
+        phone = $2,
         role = 'admin',
         is_active = true
-      RETURNING id, email, role;
-    `, [passwordHash]);
+      RETURNING id, phone, role;
+    `, [passwordHash, adminPhone]);
     
     if (result.rows.length > 0) {
       const user = result.rows[0];
       console.log('✅ Admin user set up successfully:');
-      console.log(`   Email: ${user.email}`);
+      console.log(`   Phone: ${user.phone}`);
       console.log(`   Password: ${password}`);
       console.log(`   Role: ${user.role}`);
     }
