@@ -3,9 +3,9 @@ import UserActivity from '../models/UserActivity.js';
 import pool from '../config/database.js';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// For Netlify Functions, use temp directory instead of __dirname
+const uploadsDir = process.env.UPLOAD_DIR || '/tmp/uploads';
 
 class UserController {
   // Get current logged-in user info
@@ -69,10 +69,9 @@ class UserController {
       const userId = req.user.id;
       const fileExt = path.extname(req.file.originalname);
       const fileName = `profile_${userId}_${Date.now()}${fileExt}`;
-      const filePath = path.join(__dirname, '../uploads', fileName);
+      const filePath = path.join(uploadsDir, fileName);
 
       // Ensure uploads directory exists
-      const uploadsDir = path.join(__dirname, '../uploads');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
@@ -112,8 +111,8 @@ class UserController {
         return res.status(404).json({ message: 'No profile photo found' });
       }
 
-      // Delete file from disk
-      const photoPath = path.join(__dirname, '..', user.profile_photo);
+      // Delete file from disk (use uploadsDir for temp storage)
+      const photoPath = path.join(uploadsDir, path.basename(user.profile_photo));
       if (fs.existsSync(photoPath)) {
         fs.unlinkSync(photoPath);
       }
