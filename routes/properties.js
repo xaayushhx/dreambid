@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult, query } from 'express-validator';
 import pool from '../config/database.js';
 import { authenticate, authorize } from '../middleware/auth.js';
-import { uploadImages, uploadPdf } from '../middleware/upload.js';
+import { uploadImages, uploadPdf, getFileUrl } from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -265,9 +265,9 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
     // Determine cover image
     let coverImageUrl = null;
     if (req.files?.cover_image?.[0]) {
-      coverImageUrl = `/uploads/images/${req.files.cover_image[0].filename}`;
+      coverImageUrl = req.files.cover_image[0].secure_url || `/uploads/images/${req.files.cover_image[0].filename}`;
     } else if (req.files?.images?.[0]) {
-      coverImageUrl = `/uploads/images/${req.files.images[0].filename}`;
+      coverImageUrl = req.files.images[0].secure_url || `/uploads/images/${req.files.images[0].filename}`;
     }
 
     // Create property
@@ -301,7 +301,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
     // Save images
     if (req.files?.images) {
       for (let i = 0; i < req.files.images.length; i++) {
-        const imageUrl = `/uploads/images/${req.files.images[i].filename}`;
+        const imageUrl = req.files.images[i].secure_url || `/uploads/images/${req.files.images[i].filename}`;
         await pool.query(
           'INSERT INTO property_images (property_id, image_url, image_order) VALUES ($1, $2, $3)',
           [property.id, imageUrl, i]
