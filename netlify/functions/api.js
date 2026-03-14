@@ -99,19 +99,20 @@ async function initializeAdmin() {
     const password = 'admin123';
     const passwordHash = await bcrypt.hash(password, 10);
     
-    // Create or update admin user
+    // Create or update admin user by phone
     const result = await pool.query(`
-      INSERT INTO users (email, password_hash, full_name, role, is_active)
-      VALUES ('admin@dreambid.com', $1, 'Admin User', 'admin', true)
+      INSERT INTO users (email, password_hash, full_name, phone, role, is_active)
+      VALUES ('admin@dreambid.com', $1, 'Admin User', '1234567890', 'admin', true)
       ON CONFLICT (email) DO UPDATE SET 
         password_hash = $1,
+        phone = '1234567890',
         role = 'admin',
         is_active = true
-      RETURNING id, email;
+      RETURNING id, phone;
     `, [passwordHash]);
     
     if (result.rows.length > 0) {
-      console.log('✅ Admin user ready:', result.rows[0].email);
+      console.log('✅ Admin user ready. Phone:', result.rows[0].phone);
       adminInitialized = true;
     }
   } catch (error) {
