@@ -6,6 +6,8 @@ import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import pool from '../../config/database.js';
+import bcrypt from 'bcryptjs';
 
 // Import routes
 import authRoutes from '../../routes/auth.js';
@@ -84,6 +86,51 @@ app.use((err, req, res, next) => {
   next();
 });
 
+// Initialize admin user on startup
+let adminInitialized = false;
+
+async function initializeAdmin() {
+  if (adminInitialized) return;
+  
+  try {
+    console.log('Initializing admin user...');
+    
+    // Hash password: admin123
+    const password = 'admin123';
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    // Create or update admin user
+    const result = await pool.query(`
+      INSERT INTO users (email, password_hash, full_name, role, is_active)
+      VALUES ('admin@dreambid.com', $1, 'Admin User', 'admin', true)
+      ON CONFLICT (email) DO UPDATE SET 
+        password_hash = $1,
+        role = 'admin',
+        is_active = true
+      RETURNING id, email;
+    `, [passwordHash]);
+    
+    if (result.rows.length > 0) {
+      console.log('✅ Admin user ready:', result.rows[0].email);
+      adminInitialized = true;
+    }
+  } catch (error) {
+    console.error('Admin initialization error:', error.message);
+  }
+}
+
+// Initialize admin on first request
+app.use(async (req, res, next) => {
+  if (!adminInitialized) {
+    try {
+      await initializeAdmin();
+    } catch (error) {
+      console.error('Failed to initialize admin:', error.message);
+    }
+  }
+  next();
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
@@ -99,7 +146,8 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    message: 'DreamBid API running on Netlify Functions'
+    message: 'DreamBid API running on Netlify Functions',
+    adminReady: adminInitialized
   });
 });
 
