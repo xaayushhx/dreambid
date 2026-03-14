@@ -9,8 +9,6 @@ const router = express.Router();
 // Helper function to update auction status
 const updateAuctionStatus = async () => {
   const now = new Date();
-  // Only mark as expired if auction date has passed
-  // Keep 'upcoming' status until auction date arrives
   try {
     // Check if properties table exists first
     const tableExists = await pool.query(
@@ -22,17 +20,37 @@ const updateAuctionStatus = async () => {
       return;
     }
 
-    await pool.query(
-      `UPDATE properties 
-       SET auction_status = CASE 
-         WHEN auction_status = 'upcoming' AND auction_date <= $1 THEN 'active'
-         WHEN auction_status = 'active' AND auction_date < $1 THEN 'expired'
-         ELSE auction_status
-       END
-       WHERE (auction_status = 'upcoming' AND auction_date <= $1)
-          OR (auction_status = 'active' AND auction_date < $1)`,
-      [now]
-    );
+    // Try to use auction_status if it exists, otherwise use status
+    try {
+      await pool.query(
+        `UPDATE properties 
+         SET auction_status = CASE 
+           WHEN auction_status = 'upcoming' AND auction_date <= $1 THEN 'active'
+           WHEN auction_status = 'active' AND auction_date < $1 THEN 'expired'
+           ELSE auction_status
+         END
+         WHERE (auction_status = 'upcoming' AND auction_date <= $1)
+            OR (auction_status = 'active' AND auction_date < $1)`,
+        [now]
+      );
+    } catch (err) {
+      // Fallback: use status column if auction_status doesn't exist
+      if (err.message.includes('auction_status')) {
+        await pool.query(
+          `UPDATE properties 
+           SET status = CASE 
+             WHEN status = 'upcoming' AND auction_date <= $1 THEN 'active'
+             WHEN status = 'active' AND auction_date < $1 THEN 'expired'
+             ELSE status
+           END
+           WHERE (status = 'upcoming' AND auction_date <= $1)
+              OR (status = 'active' AND auction_date < $1)`,
+          [now]
+        );
+      } else {
+        throw err;
+      }
+    }
   } catch (err) {
     // Log and continue - don't crash the server if DB is unavailable during dev
     console.warn('updateAuctionStatus: database unavailable or query failed', err && err.message ? err.message : err);
@@ -114,11 +132,11 @@ router.get('/', [
     } else if (status) {
       // Specific status requested
       paramCount++;
-      query += ` AND auction_status = $${paramCount}`;
+      query += ` AND COALESCE(auction_status, status) = $${paramCount}`;
       params.push(status);
     } else {
       // No status filter - exclude expired by default (for public website)
-      query += ` AND auction_status != 'expired'`;
+      query += ` AND COALESCE(auction_status, status) != 'expired'`;
     }
 
     if (city) {
