@@ -162,40 +162,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-midnight-900 border border-midnight-700 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Recent Activity</h2>
-          
-          {activities.length > 0 ? (
-            <div className="space-y-4">
-              {activities.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-4 pb-4 border-b border-midnight-700 last:border-0">
-                  <div className="flex-1">
-                    <p className="text-text-primary font-medium">
-                      {getActionLabel(activity.action)}
-                    </p>
-                    {activity.data && (
-                      <p className="text-sm text-text-secondary mt-1">
-                        {JSON.stringify(activity.data).substring(0, 100)}...
-                      </p>
-                    )}
-                  </div>
-                  <p className="text-sm text-text-muted whitespace-nowrap">
-                    {formatDate(activity.created_at)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-text-muted text-center py-8">No activity yet</p>
-          )}
 
-          <div className="mt-6 text-center">
-            <a href="/activity" className="text-gold hover:text-gold-hover font-medium">
-              View All Activity →
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   );
