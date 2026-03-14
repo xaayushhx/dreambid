@@ -21,10 +21,10 @@ router.post('/register', [
     .notEmpty()
     .withMessage('Full name is required'),
   body('phone')
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
-    .matches(/^[\d\s\-\+\(\)]+$/)
-    .withMessage('Invalid phone number')
+    .matches(/^\d{10}$/)
+    .withMessage('Phone number must be exactly 10 digits')
 ], AuthController.register);
 
 // @route   POST /api/auth/login

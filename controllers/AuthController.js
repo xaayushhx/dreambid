@@ -18,10 +18,18 @@ class AuthController {
 
       const { email, password, full_name, phone } = req.body;
 
-      // Check if user exists
+      // Check if user exists by email
       const existingUser = await User.findByEmail(email);
       if (existingUser) {
         return res.status(409).json({ message: 'Email already registered' });
+      }
+
+      // Check if phone number is already registered (if provided)
+      if (phone) {
+        const existingPhone = await User.findByPhone(phone);
+        if (existingPhone) {
+          return res.status(409).json({ message: 'Phone number already registered' });
+        }
       }
 
       // Create user with bcrypt hashing
@@ -51,6 +59,7 @@ class AuthController {
           id: user.id,
           email: user.email,
           full_name: user.full_name,
+          phone: user.phone,
           role: user.role
         }
       });
@@ -59,6 +68,15 @@ class AuthController {
       
       if (error.message === 'Email already exists') {
         return res.status(409).json({ message: 'Email already registered' });
+      }
+
+      // Handle unique constraint violations from database
+      if (error.code === '23505') {
+        if (error.constraint === 'users_email_key') {
+          return res.status(409).json({ message: 'Email already registered' });
+        } else if (error.constraint === 'users_phone_key') {
+          return res.status(409).json({ message: 'Phone number already registered' });
+        }
       }
 
       res.status(500).json({ message: 'Registration failed', error: error.message });
