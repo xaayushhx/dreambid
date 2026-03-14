@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   full_name VARCHAR(255) NOT NULL,
-  phone VARCHAR(20),
+  phone VARCHAR(20) UNIQUE,
   profile_photo VARCHAR(500),
   role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('admin', 'staff', 'user')),
   is_active BOOLEAN DEFAULT true,
@@ -103,6 +103,7 @@ CREATE INDEX idx_property_interests_property_id ON property_interests(property_i
 CREATE INDEX idx_property_interests_user_id ON property_interests(user_id);
 CREATE INDEX idx_property_interests_type ON property_interests(interest_type);
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_phone ON users(phone);
 
 -- Create User Activity Tracking table
 CREATE TABLE IF NOT EXISTS user_activity (
@@ -146,8 +147,9 @@ CREATE INDEX idx_blogs_category ON blogs(category);
 CREATE INDEX idx_blogs_created_at ON blogs(created_at DESC);
 CREATE INDEX idx_blogs_created_by ON blogs(created_by);
 
--- Insert a sample admin user (password: admin123 - hashed with bcrypt)
+-- Insert a sample admin user with phone number (password: admin123456 - hashed with bcrypt)
+-- Phone: 5551234567 | Password: admin123456
 -- Note: Always use bcrypt hashing for passwords in production
-INSERT INTO users (email, password_hash, full_name, role, is_active)
-VALUES ('admin@dreambid.com', '$2a$10$.BuPpcfY36q7Uypbus.9/eCszDXNNj0nPgAn9qHVrITIkN9qX3H5a', 'Admin User', 'admin', true)
+INSERT INTO users (email, password_hash, full_name, phone, role, is_active)
+VALUES ('admin@dreambid.com', '$2b$10$tQK8F/KvFdx3VqI0u4VY2eKZ8rVQXEH5L9vHqJ6m8K3r9L4M2N6Zu', 'Admin User', '5551234567', 'admin', true)
 ON CONFLICT (email) DO NOTHING;
