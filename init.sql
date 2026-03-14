@@ -1,7 +1,10 @@
 -- ============================================================
--- DreamBid Complete Database Schema
--- PostgreSQL setup script with all tables and fields
--- Last Updated: March 13, 2026
+-- DreamBid Master Database Schema
+-- PostgreSQL setup script - Complete initialization
+-- Updated: March 14, 2026
+-- 
+-- Usage: psql -h your_host -U your_user -d your_database -f init.sql
+-- Or in Neon: Copy entire content and run in SQL Editor
 -- ============================================================
 
 -- ============================================================
@@ -59,7 +62,7 @@ CREATE TABLE IF NOT EXISTS properties (
   -- Possession details
   possession_type VARCHAR(100),
   
-  -- Status and visibility
+  -- Status and visibility (using 'status' instead of 'auction_status' for consistency)
   status VARCHAR(50) DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'active', 'expired', 'sold', 'cancelled')),
   is_featured BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
@@ -225,25 +228,42 @@ CREATE INDEX IF NOT EXISTS idx_user_registrations_contact ON user_registrations(
 -- ============================================================
 -- SAMPLE DATA - Admin User
 -- ============================================================
--- Insert a sample admin user with phone number (password: admin123456 - hashed with bcrypt)
--- Phone: 5551234567 | Password: admin123456
--- Note: Always use bcrypt hashing for passwords in production
+-- Admin credentials:
+-- Phone: 5551234567
+-- Password: admin123456 (hashed with bcrypt $2b$10)
+-- 
+-- To login:
+-- curl -X POST https://your-api.com/api/auth/login \
+--   -H "Content-Type: application/json" \
+--   -d '{"phone":"5551234567","password":"admin123456"}'
+
 INSERT INTO users (email, password_hash, full_name, phone, role, is_active)
 VALUES ('admin@dreambid.com', '$2b$10$tQK8F/KvFdx3VqI0u4VY2eKZ8rVQXEH5L9vHqJ6m8K3r9L4M2N6Zu', 'Admin User', '5551234567', 'admin', true)
 ON CONFLICT (email) DO NOTHING;
 
 -- ============================================================
--- TABLE STRUCTURE SUMMARY
+-- SCHEMA SUMMARY
 -- ============================================================
--- 1. users (8 fields) - User accounts and authentication
--- 2. properties (32 fields) - Main property listings
--- 3. property_images (4 fields) - Property images
--- 4. enquiries (11 fields) - User inquiries
--- 5. property_interests (6 fields) - User interactions
--- 6. user_activity (7 fields) - Activity audit trail
--- 7. blogs (13 fields) - Blog articles
--- 8. user_registrations (5 fields) - Registration form submissions
+-- Tables: 8
+-- - users (8 fields) - User accounts and authentication
+-- - properties (32 fields) - Main property listings  
+-- - property_images (4 fields) - Property images
+-- - enquiries (11 fields) - User inquiries
+-- - property_interests (6 fields) - User interactions (view/share/save)
+-- - user_activity (7 fields) - Activity audit trail
+-- - blogs (13 fields) - Blog articles
+-- - user_registrations (5 fields) - Registration form submissions
 --
--- Total: 86 fields across 8 tables
--- Indexes: 42 performance indexes
+-- Total Fields: 86 fields
+-- Total Indexes: 42 performance indexes
+--
+-- Key Features:
+-- ✓ Phone-based authentication (primary login method)
+-- ✓ Email auto-generated from phone (user_{phone}@dreambid.com)
+-- ✓ Role-based access control (admin/staff/user)
+-- ✓ Comprehensive audit trail via user_activity table
+-- ✓ Property status tracking (upcoming/active/expired/sold/cancelled)
+-- ✓ Enquiry management system
+-- ✓ Blog publishing platform
+-- ✓ User engagement tracking (views/shares/saves)
 -- ============================================================
