@@ -7,15 +7,10 @@
   NODE_VERSION = "20.11.0"
   NPM_CONFIG_PRODUCTION = "false"
 
-# Environment variables for Neon database
-# Set these in Netlify dashboard:
-# DATABASE_URL: postgresql://user:password@neon.tech/database?sslmode=require
-# NODE_ENV: production
-
 # API Routes to Netlify Functions
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/api:splat"
+  to = "/.netlify/functions/api"
   status = 200
 
 # SPA fallback - serve index.html for all non-file requests
@@ -40,9 +35,5 @@
 [functions]
   node_bundler = "esbuild"
   directory = "netlify/functions"
-  
-  # Increase timeout for database operations
-  [functions.api]
-    timeout = 30
 
 

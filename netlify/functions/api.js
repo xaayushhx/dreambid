@@ -1,64 +1,65 @@
-import serverless from 'serverless-http';
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import { fileURLToPath } from 'url';
-import path from 'path';
-import dotenv from 'dotenv';
+// Netlify Functions handler - Direct Lambda style
+export async function handler(event, context) {
+  const path = event.path || event.rawPath || '';
+  const method = event.httpMethod || event.requestContext?.http?.method || 'GET';
+  
+  console.log(`API Request: ${method} ${path}`);
+  
+  // CORS headers
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
 
-// Load environment variables
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+  // Handle preflight
+  if (method === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: '',
+    };
+  }
 
-// Minimal Express app - just to test connectivity
-const app = express();
-
-// CORS Configuration
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://dreambidapp.netlify.app',
-  'https://dreambidapp.netlify.app',
-  'https://dreambid-p.netlify.app',
-  'https://dreambid.netlify.app',
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:5174',
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+  try {
+    // Health check
+    if (path === '/api/health' || path.endsWith('/api/health')) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ 
+          status: 'OK', 
+          timestamp: new Date().toISOString(),
+          message: 'DreamBid API is running on Netlify Functions'
+        }),
+      };
     }
-  },
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
 
-// Middleware
-app.use(helmet());
-app.use(cors(corsOptions));
-app.use(morgan('combined'));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+    // Test route
+    if (path === '/api/test' || path.endsWith('/api/test')) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ message: 'API is working' }),
+      };
+    }
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
-
-// Test route
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working' });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
-// Export for Netlify Functions
-export const handler = serverless(app);
+    // Catch-all 404
+    return {
+      statusCode: 404,
+      headers,
+      body: JSON.stringify({ message: `Route ${method} ${path} not found` }),
+    };
+  } catch (error) {
+    console.error('Function error:', error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ 
+        message: 'Internal server error',
+        error: error.message 
+      }),
+    };
+  }
+}
