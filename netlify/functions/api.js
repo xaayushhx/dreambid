@@ -25,13 +25,8 @@ const app = express();
 
 // CORS Configuration
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://dreambidapp.netlify.app',
-  'https://dreambidapp.netlify.app',
+  process.env.FRONTEND_URL || 'https://dreambid-p.netlify.app',
   'https://dreambid-p.netlify.app',
-  'https://dreambid.netlify.app',
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:5174',
 ];
 
 const corsOptions = {
