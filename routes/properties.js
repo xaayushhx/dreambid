@@ -351,7 +351,7 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), uploadImages, asyn
     const {
       title, description, property_type, address, city, state, zip_code, country,
       latitude, longitude, area_sqft, bedrooms, bathrooms, floors,
-      reserve_price, auction_date, auction_time, auction_status, is_featured, is_active,
+      reserve_price, auction_date, auction_time, status, is_featured, is_active,
       estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date
     } = req.body;
 
@@ -400,10 +400,10 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), uploadImages, asyn
       updates.push(`auction_date = $${paramCount}`);
       values.push(new Date(auction_date));
     }
-    if (auction_status !== undefined) {
+    if (status !== undefined) {
       paramCount++;
-      updates.push(`auction_status = $${paramCount}`);
-      values.push(auction_status);
+      updates.push(`status = $${paramCount}`);
+      values.push(status);
     }
     if (is_featured !== undefined) {
       paramCount++;

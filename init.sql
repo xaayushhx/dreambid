@@ -238,7 +238,7 @@ CREATE INDEX IF NOT EXISTS idx_user_registrations_contact ON user_registrations(
 --   -d '{"phone":"5551234567","password":"admin123456"}'
 
 INSERT INTO users (email, password_hash, full_name, phone, role, is_active)
-VALUES ('admin@dreambid.com', '$2b$10$tQK8F/KvFdx3VqI0u4VY2eKZ8rVQXEH5L9vHqJ6m8K3r9L4M2N6Zu', 'Admin User', '5551234567', 'admin', true)
+VALUES ('admin@dreambid.com', '$2a$10$53Do2hAKDxUAGWI8JDWAbu8B4gRgIJR0xM1MGXeyWgJiRYyF4QJlS', 'Admin User', '5551234567', 'admin', true)
 ON CONFLICT (email) DO NOTHING;
 
 -- ============================================================
