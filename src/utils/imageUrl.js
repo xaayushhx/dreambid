@@ -10,12 +10,7 @@ export const getImageUrl = (imagePath) => {
     return imagePath;
   }
   
-  // For development, check if it's a local file path
-  if (process.env.NODE_ENV === 'development') {
-    // Return placeholder for missing images in development
-    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMzAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPg0KPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNmMGYwZjAiLz4KPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1NlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSIjNjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlByb3BlcnR5IEltYWdlPC90ZXh0Pjwvc3Zz4KPC9zdmc+';
-  }
-  
+
   // Get API base URL (remove /api suffix if present)
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const baseUrl = apiUrl.replace('/api', '');
