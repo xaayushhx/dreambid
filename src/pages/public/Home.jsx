@@ -591,8 +591,8 @@ function Home() {
                   ref={morePropertiesRef}
                   className="flex gap-6 md:gap-8 overflow-x-auto scroll-smooth hide-scrollbar"
                 >
-                  {/* Duplicate properties for infinite loop effect */}
-                  {[...properties, ...properties].map((property, index) => {
+                  {/* Display each property once */}
+                  {properties.map((property, index) => {
                     const imageUrl = property.cover_image_url || 
                       (property.images && property.images.length > 0 
                         ? (typeof property.images[0] === 'object' ? property.images[0].image_url : property.images[0])
