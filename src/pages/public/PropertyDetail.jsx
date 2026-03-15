@@ -616,7 +616,7 @@ function PropertyDetail() {
                 <h3 className="text-lg font-semibold text-text-primary mb-4">Location</h3>
                 <div>
                   <div className="aspect-video rounded-lg overflow-hidden">
-                    <LoadScript googleMapsApiKey="YOUR_API_KEY">
+                    <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
                       <GoogleMap
                         mapContainerStyle={mapContainerStyle}
                         center={center}
