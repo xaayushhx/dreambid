@@ -265,9 +265,11 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
     // Determine cover image
     let coverImageUrl = null;
     if (req.files?.cover_image?.[0]) {
-      coverImageUrl = req.files.cover_image[0].secure_url || `/uploads/images/${req.files.cover_image[0].filename}`;
+      // Cloudinary returns secure_url, local storage returns filename
+      coverImageUrl = req.files.cover_image[0].secure_url || req.files.cover_image[0].path || `/uploads/images/${req.files.cover_image[0].filename}`;
     } else if (req.files?.images?.[0]) {
-      coverImageUrl = req.files.images[0].secure_url || `/uploads/images/${req.files.images[0].filename}`;
+      // Use first image from images array as cover if no explicit cover_image
+      coverImageUrl = req.files.images[0].secure_url || req.files.images[0].path || `/uploads/images/${req.files.images[0].filename}`;
     }
 
     // Create property
@@ -301,7 +303,8 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
     // Save images
     if (req.files?.images) {
       for (let i = 0; i < req.files.images.length; i++) {
-        const imageUrl = req.files.images[i].secure_url || `/uploads/images/${req.files.images[i].filename}`;
+        // Cloudinary returns secure_url, local storage returns filename
+        const imageUrl = req.files.images[i].secure_url || req.files.images[i].path || `/uploads/images/${req.files.images[i].filename}`;
         await pool.query(
           'INSERT INTO property_images (property_id, image_url, image_order) VALUES ($1, $2, $3)',
           [property.id, imageUrl, i]
@@ -436,7 +439,8 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), uploadImages, asyn
     if (req.files?.cover_image?.[0]) {
       paramCount++;
       updates.push(`cover_image_url = $${paramCount}`);
-      values.push(`/uploads/images/${req.files.cover_image[0].filename}`);
+      const coverUrl = req.files.cover_image[0].secure_url || req.files.cover_image[0].path || `/uploads/images/${req.files.cover_image[0].filename}`;
+      values.push(coverUrl);
     }
 
     if (updates.length === 0) {
@@ -452,7 +456,7 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), uploadImages, asyn
     // Handle new images
     if (req.files?.images) {
       for (let i = 0; i < req.files.images.length; i++) {
-        const imageUrl = `/uploads/images/${req.files.images[i].filename}`;
+        const imageUrl = req.files.images[i].secure_url || req.files.images[i].path || `/uploads/images/${req.files.images[i].filename}`;
         const maxOrder = await pool.query(
           'SELECT COALESCE(MAX(image_order), -1) + 1 as next_order FROM property_images WHERE property_id = $1',
           [id]
