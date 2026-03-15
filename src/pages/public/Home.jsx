@@ -117,10 +117,8 @@ function Home() {
   // Featured properties - only from the featured query, no fallback
   const featuredProperties = featuredData?.data?.properties || [];
   
-  // General properties for "More Properties" section - uses fallback when featured is empty
-  const properties = featuredData?.data?.properties && featuredData.data.properties.length > 0 
-    ? featuredData.data.properties 
-    : fallbackData?.data?.properties || [];
+  // General properties for "More Properties" section - always use fallback (non-featured properties)
+  const properties = fallbackData?.data?.properties || [];
 
   // Define cities data
   const citiesData = [
