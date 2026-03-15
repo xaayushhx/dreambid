@@ -118,7 +118,16 @@ function Home() {
   const featuredProperties = featuredData?.data?.properties || [];
   
   // General properties for "More Properties" section - always use fallback (non-featured properties)
-  const properties = fallbackData?.data?.properties || [];
+  // Deduplicate by ID to prevent any duplicate rendering
+  const properties = useMemo(() => {
+    const fallbackProps = fallbackData?.data?.properties || [];
+    const seen = new Set();
+    return fallbackProps.filter(prop => {
+      if (seen.has(prop.id)) return false;
+      seen.add(prop.id);
+      return true;
+    });
+  }, [fallbackData]);
 
   // Define cities data
   const citiesData = [
