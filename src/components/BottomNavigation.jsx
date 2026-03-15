@@ -13,13 +13,6 @@ function BottomNavigation() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Hide bottom navigation if running in Capacitor (mobile app)
-  const isCapacitorApp = window.Capacitor && window.Capacitor.isNativePlatform?.();
-  
-  if (isCapacitorApp) {
-    return null; // Don't render in native app - use app's native navigation
-  }
-
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
@@ -38,7 +31,7 @@ function BottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-midnight-800 border-t border-midnight-700 shadow-lg md:hidden z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-midnight-800 border-t border-midnight-700 shadow-lg md:hidden z-40 pb-safe">
       <div className="flex justify-around items-center h-16">
         {navItems.map(({ path, label, icon: Icon }) => (
           <button
