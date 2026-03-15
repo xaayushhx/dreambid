@@ -13,6 +13,13 @@ function BottomNavigation() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Hide bottom navigation if running in Capacitor (mobile app)
+  const isCapacitorApp = window.Capacitor && window.Capacitor.isNativePlatform?.();
+  
+  if (isCapacitorApp) {
+    return null; // Don't render in native app - use app's native navigation
+  }
+
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
