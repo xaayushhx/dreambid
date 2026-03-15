@@ -36,8 +36,8 @@ CREATE TABLE IF NOT EXISTS properties (
   state VARCHAR(100),
   zip_code VARCHAR(20),
   country VARCHAR(100) DEFAULT 'India',
-  latitude DECIMAL(10, 8),
-  longitude DECIMAL(11, 8),
+  latitude DECIMAL(9, 6),
+  longitude DECIMAL(10, 6),
   
   -- Area measurements
   area_sqft DECIMAL(10, 2),
