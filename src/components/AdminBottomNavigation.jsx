@@ -24,7 +24,7 @@ function AdminBottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-midnight-800 border-t border-midnight-700 shadow-lg md:hidden z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-midnight-800 border-t border-midnight-700 shadow-lg md:hidden z-40" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0) + 0.5rem)' }}>
       <div className="flex justify-around items-center h-16">
         {navItems.map(({ path, label, icon: Icon }) => (
           <button

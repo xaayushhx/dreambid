@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from 'react-query';
 import { propertiesAPI, enquiriesAPI, interestsAPI } from '../../services/api';
 import { contactViaWhatsApp, shareProperty } from '../../utils/whatsapp';
@@ -8,6 +8,16 @@ import { formatNumber } from '../../utils/formatNumber';
 import { useShortlist } from '../../contexts/ShortlistContext';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import toast from 'react-hot-toast';
+import {
+  HomeIcon,
+  CreditCardIcon,
+  DocumentTextIcon,
+  UserGroupIcon,
+  CheckCircleIcon,
+  BanknotesIcon,
+  DocumentCheckIcon,
+  BuildingOffice2Icon
+} from '@heroicons/react/24/outline';
 
 const mapContainerStyle = {
   width: '100%',
@@ -34,54 +44,55 @@ const buyingProcessSteps = [
     number: 1, 
     title: 'Choose a Property', 
     description: 'Explore our listings & find a property that meets your requirements.',
-    icon: 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8'
+    icon: HomeIcon
   },
   { 
     number: 2, 
     title: 'Pay EMD', 
     description: 'Pay 10% earnest money deposit as an assurance of interest in the property.',
-    icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+    icon: CreditCardIcon
   },
   { 
     number: 3, 
     title: 'Submit Application', 
     description: 'Submit the Common Application Form (CAF) and prepare for auction.',
-    icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+    icon: DocumentTextIcon
   },
   { 
     number: 4, 
     title: 'Participate in Auction', 
     description: 'Register with the auction portal and take part in the bidding process.',
-    icon: 'M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zM5 20a6 6 0 0110-12 6 6 0 0110 12H5z'
+    icon: UserGroupIcon
   },
   { 
     number: 5, 
     title: 'Auction Outcome', 
     description: 'If you win, pay 15%. If you lose, get the EMD refund.',
-    icon: 'M13 10V3L4 14h7v7l9-11h-7z'
+    icon: CheckCircleIcon
   },
   { 
     number: 6, 
     title: 'Pay 75% in 15 Days', 
     description: 'Pay the remaining 75% within 15 Days to start the registration process.',
-    icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+    icon: BanknotesIcon
   },
   { 
     number: 7, 
     title: 'Obtain Sale Certificate', 
     description: 'The seller institution issues the sale certificate after payment completion.',
-    icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+    icon: DocumentCheckIcon
   },
   { 
     number: 8, 
     title: 'Register the Property', 
     description: 'Authorized officer registers the property in the Sub-Registrar Office.',
-    icon: 'M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 16l4-4m0 0l4 4m-4-4V5'
+    icon: BuildingOffice2Icon
   },
 ];
 
 function PropertyDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toggleShortlist, isShortlisted } = useShortlist();
   const [enquiryForm, setEnquiryForm] = useState({
     name: '',
@@ -813,7 +824,7 @@ function PropertyDetail() {
           {/* Right Column - Sticky Sidebar (30%) */}
           <div className="lg:w-[400px] lg:sticky lg:top-8 lg:h-fit space-y-6">
             {/* Expression of Interest Form */}
-            <div className="bg-gray-900 rounded-2xl shadow-sm p-6">
+            <div id="expression-of-interest-form" className="bg-gray-900 rounded-2xl shadow-sm p-6">
               <h3 className="text-xl font-bold text-white mb-6">Expression of Interest</h3>
               <form onSubmit={handleEnquirySubmit} className="space-y-4">
                 <div>
@@ -938,8 +949,8 @@ function PropertyDetail() {
                   </div>
                   <div>
                     <p className="text-xs text-text-muted uppercase font-semibold">Phone</p>
-                    <a href="tel:+911140855500" className="text-sm font-semibold text-text-primary hover:text-gold transition">
-                      +91 1140 8555 00
+                    <a href="tel:+917428264402" className="text-sm font-semibold text-text-primary hover:text-gold transition">
+                      +91-7428264402
                     </a>
                   </div>
                 </div>
@@ -979,9 +990,7 @@ function PropertyDetail() {
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
                       index < 2 ? 'bg-green-50' : 'bg-gray-50'
                     }`}>
-                      <svg className={`w-4 h-4 ${index < 2 ? 'text-green-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={step.icon} />
-                      </svg>
+                      <step.icon className={`w-4 h-4 ${index < 2 ? 'text-green-600' : 'text-gray-400'}`} />
                     </div>
                   </div>
                 ))}
@@ -991,6 +1000,29 @@ function PropertyDetail() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Fixed Bottom Buttons - Two Button Layout */}
+      <div className="fixed left-0 right-0 lg:hidden z-50 px-4 py-3" style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0))' }}>
+        {/* Background card */}
+        <div className="bg-midnight-800 border border-midnight-700 rounded-lg p-3 flex gap-3 shadow-lg">
+          <button
+            onClick={() => document.getElementById('expression-of-interest-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            className="flex-1 px-4 py-3 bg-gold text-midnight-900 rounded-lg hover:bg-gold/90 transition font-semibold text-sm"
+          >
+            I am interested
+          </button>
+          <button
+            onClick={() => navigate('/contact')}
+            className="flex-1 px-4 py-3 bg-midnight-700 text-gold border border-gold rounded-lg hover:bg-midnight-600 transition font-semibold text-sm flex items-center justify-center gap-2"
+          >
+            <img src="/whatsapp.svg" alt="WhatsApp" className="w-5 h-5" />
+            Contact Us
+          </button>
+        </div>
+      </div>
+
+      {/* Spacer for mobile to prevent content overlap */}
+      <div className="lg:hidden h-24" />
     </div>
   );
 }

@@ -149,9 +149,10 @@ To help protect your account:
 
 For privacy or security concerns:
 
-**Email:** security@dreambid.com
-**Support:** support@dreambid.com
-**Report Bug:** security@dreambid.com (with details)
+**Email:** dreambidproperties01@gmail.com
+**Support:** dreambidproperties01@gmail.com
+**Report Bug:** dreambidproperties01@gmail.com (with details)
+**Phone:** +91-7428264402
 
 We respond to all security inquiries within 24 hours.
 

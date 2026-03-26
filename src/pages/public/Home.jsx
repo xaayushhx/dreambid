@@ -7,6 +7,16 @@ import { shareProperty } from '../../utils/whatsapp';
 import { getImageUrl } from '../../utils/imageUrl';
 import { useShortlist } from '../../contexts/ShortlistContext';
 import PropertyTypeDropdown from '../../components/PropertyTypeDropdown';
+import {
+  HomeIcon,
+  CreditCardIcon,
+  DocumentTextIcon,
+  UserGroupIcon,
+  CheckCircleIcon,
+  BanknotesIcon,
+  DocumentCheckIcon,
+  BuildingOffice2Icon
+} from '@heroicons/react/24/outline';
 
 // Custom hook for debouncing
 function useDebounce(value, delay) {
@@ -717,9 +727,7 @@ function Home() {
                   <div className="w-12 h-12 bg-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl font-bold text-midnight-950">01</span>
                   </div>
-                  <svg className="w-6 h-6 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
+                  <HomeIcon className="w-6 h-6 text-cyan-400 flex-shrink-0" />
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">Choose a Property</h3>
                 <p className="text-text-secondary text-sm">Explore our listings & find a property that meets your requirements.</p>
@@ -731,9 +739,7 @@ function Home() {
                   <div className="w-12 h-12 bg-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl font-bold text-white">02</span>
                   </div>
-                  <svg className="w-6 h-6 text-cyan-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <CreditCardIcon className="w-6 h-6 text-cyan-500 flex-shrink-0" />
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">Pay EMD</h3>
                 <p className="text-text-secondary text-sm">Pay 10% earnest money deposit as an assurance of interest in the property.</p>
@@ -745,9 +751,7 @@ function Home() {
                   <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl font-bold text-white">03</span>
                   </div>
-                  <svg className="w-6 h-6 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                  <DocumentTextIcon className="w-6 h-6 text-blue-500 flex-shrink-0" />
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">Submit Application</h3>
                 <p className="text-text-secondary text-sm">Submit the Common Application Form (CAF) and prepare for auction.</p>
@@ -759,9 +763,7 @@ function Home() {
                   <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl font-bold text-white">04</span>
                   </div>
-                  <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zM5 20a6 6 0 0110-12 6 6 0 0110 12H5z" />
-                  </svg>
+                  <UserGroupIcon className="w-6 h-6 text-blue-600 flex-shrink-0" />
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">Participate in Auction</h3>
                 <p className="text-text-secondary text-sm">Register with the auction portal and take part in the bidding process.</p>
@@ -773,9 +775,7 @@ function Home() {
                   <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl font-bold text-white">05</span>
                   </div>
-                  <svg className="w-6 h-6 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                  <CheckCircleIcon className="w-6 h-6 text-green-500 flex-shrink-0" />
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">Auction Outcome</h3>
                 <p className="text-text-secondary text-sm">If you win, pay 15%. If you lose, get the EMD refund.</p>
@@ -787,9 +787,7 @@ function Home() {
                   <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl font-bold text-midnight-950">06</span>
                   </div>
-                  <svg className="w-6 h-6 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <BanknotesIcon className="w-6 h-6 text-yellow-500 flex-shrink-0" />
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">Pay 75% in 15 Days</h3>
                 <p className="text-text-secondary text-sm">Pay the remaining 75% within 15 Days to start the registration process.</p>
@@ -801,9 +799,7 @@ function Home() {
                   <div className="w-12 h-12 bg-orange-400 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl font-bold text-white">07</span>
                   </div>
-                  <svg className="w-6 h-6 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <DocumentCheckIcon className="w-6 h-6 text-orange-500 flex-shrink-0" />
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">Obtain Sale Certificate</h3>
                 <p className="text-text-secondary text-sm">The seller institution issues the sale certificate after payment completion.</p>
@@ -815,9 +811,7 @@ function Home() {
                   <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl font-bold text-white">08</span>
                   </div>
-                  <svg className="w-6 h-6 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 16l4-4m0 0l4 4m-4-4V5" />
-                  </svg>
+                  <BuildingOffice2Icon className="w-6 h-6 text-red-500 flex-shrink-0" />
                 </div>
                 <h3 className="text-lg font-bold text-text-primary mb-2">Register the Property</h3>
                 <p className="text-text-secondary text-sm">Authorized officer registers the property in the Sub-Registrar Office.</p>
@@ -912,7 +906,7 @@ function Home() {
 
             {/* Email */}
             <a
-              href="mailto:info@dreambid.com"
+              href="mailto:dreambidproperties01@gmail.com"
               className="bg-gradient-to-br from-midnight-800 to-midnight-750 border border-midnight-700 rounded-lg p-6 hover:border-gold hover:shadow-lg hover:shadow-gold/20 transition-all duration-300 text-center group"
             >
               <div className="w-14 h-14 bg-gold/10 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-gold/20 transition-all">

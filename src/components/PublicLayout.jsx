@@ -6,7 +6,7 @@ function PublicLayout() {
   return (
     <div className="min-h-screen bg-midnight-900 flex flex-col pt-safe">
       <Navbar />
-      <main className="relative flex-grow pb-28 md:pb-0"><Outlet /></main>
+      <main className="relative flex-grow md:pb-0" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0))' }}><Outlet /></main>
       <BottomNavigation />
       <footer className="hidden lg:block bg-gradient-to-b from-midnight-900 to-midnight-950 text-white py-12 md:py-16 border-t border-midnight-700">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -76,8 +76,8 @@ function PublicLayout() {
               <h4 className="text-lg font-semibold text-white mb-4">Contact</h4>
               <ul className="space-y-3">
                 <li>
-                  <a href="mailto:info@dreambid.com" className="text-text-secondary hover:text-gold transition-colors text-sm">
-                    Email: info@dreambid.com
+                  <a href="mailto:dreambidproperties01@gmail.com" className="text-text-secondary hover:text-gold transition-colors text-sm">
+                    Email: dreambidproperties01@gmail.com
                   </a>
                 </li>
                 <li>

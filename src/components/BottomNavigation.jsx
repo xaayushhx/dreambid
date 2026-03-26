@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   HomeIcon, 
-  MagnifyingGlassIcon, 
+  BuildingOffice2Icon, 
   HeartIcon, 
   UserIcon,
   Cog6ToothIcon
@@ -17,7 +17,7 @@ function BottomNavigation() {
 
   const navItems = [
     { path: '/', label: 'Home', icon: HomeIcon },
-    { path: '/properties', label: 'Browse', icon: MagnifyingGlassIcon },
+    { path: '/properties', label: 'Listed Properties', icon: BuildingOffice2Icon },
     { path: '/shortlisted', label: 'Saved', icon: HeartIcon },
     ...(user 
       ? [
@@ -31,7 +31,7 @@ function BottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-midnight-800 border-t border-midnight-700 shadow-lg md:hidden z-40 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 bg-midnight-800 border-t border-midnight-700 shadow-lg md:hidden z-40" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0) + 0.5rem)' }}>
       <div className="flex justify-around items-center h-16">
         {navItems.map(({ path, label, icon: Icon }) => (
           <button
