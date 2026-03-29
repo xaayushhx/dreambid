@@ -43,11 +43,11 @@ export const authAPI = {
 export const propertiesAPI = {
   getAll: (params) => api.get('/properties', { params }),
   getById: (id) => api.get(`/properties/${id}`),
-  create: (formData) => api.post('/properties', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  create: (data) => api.post('/properties', data, {
+    headers: { 'Content-Type': 'application/json' },
   }),
-  update: (id, formData) => api.put(`/properties/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  update: (id, data) => api.put(`/properties/${id}`, data, {
+    headers: { 'Content-Type': 'application/json' },
   }),
   delete: (id) => api.delete(`/properties/${id}`),
   uploadPdf: (id, formData) => api.post(`/properties/${id}/pdf`, formData, {

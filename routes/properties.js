@@ -196,11 +196,16 @@ router.get('/', [
     // Get images for each property
     for (let property of result.rows) {
       const imagesResult = await pool.query(
-        'SELECT id, image_url, image_order FROM property_images WHERE property_id = $1 ORDER BY image_order',
+        'SELECT id, image_url, image_data, image_mime_type, image_order FROM property_images WHERE property_id = $1 ORDER BY image_order',
         [property.id]
       );
-      // Return as objects with image_url property for consistency
-      property.images = imagesResult.rows;
+      // Convert image data to base64 if available
+      property.images = imagesResult.rows.map(img => ({
+        id: img.id,
+        image_url: img.image_url,
+        image_data: img.image_data ? 'data:' + (img.image_mime_type || 'image/jpeg') + ';base64,' + img.image_data.toString('base64') : null,
+        image_order: img.image_order
+      }));
     }
 
     res.json({
@@ -221,7 +226,7 @@ router.get('/', [
 // @route   POST /api/properties
 // @desc    Create new property
 // @access  Private (Admin/Staff)
-router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
+router.post('/', authenticate, authorize('admin', 'staff'), [
   body('title').trim().notEmpty(),
   body('description').optional().trim(),
   body('address').trim().notEmpty(),
@@ -259,18 +264,12 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
       total_area,
       emd,
       possession_type,
-      application_end_date
+      application_end_date,
+      images
     } = req.body;
 
-    // Determine cover image
-    let coverImageUrl = null;
-    if (req.files?.cover_image?.[0]) {
-      // Cloudinary returns secure_url, local storage returns filename
-      coverImageUrl = req.files.cover_image[0].secure_url || req.files.cover_image[0].path || `/uploads/images/${req.files.cover_image[0].filename}`;
-    } else if (req.files?.images?.[0]) {
-      // Use first image from images array as cover if no explicit cover_image
-      coverImageUrl = req.files.images[0].secure_url || req.files.images[0].path || `/uploads/images/${req.files.images[0].filename}`;
-    }
+    // Use first image as cover image URL (placeholder or base64 reference)
+    let coverImageUrl = images && images.length > 0 ? 'data:image/stored' : null;
 
     // Create property
     const propertyResult = await pool.query(
@@ -300,14 +299,22 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
 
     const property = propertyResult.rows[0];
 
-    // Save images
-    if (req.files?.images) {
-      for (let i = 0; i < req.files.images.length; i++) {
-        // Cloudinary returns secure_url, local storage returns filename
-        const imageUrl = req.files.images[i].secure_url || req.files.images[i].path || `/uploads/images/${req.files.images[i].filename}`;
+    // Save base64 images
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
+        const imageObj = images[i];
+        
+        // Extract base64 data from data URL
+        let base64Data = imageObj.data;
+        if (base64Data.startsWith('data:')) {
+          base64Data = base64Data.split(',')[1];
+        }
+        
+        const buffer = Buffer.from(base64Data, 'base64');
+        
         await pool.query(
-          'INSERT INTO property_images (property_id, image_url, image_order) VALUES ($1, $2, $3)',
-          [property.id, imageUrl, i]
+          'INSERT INTO property_images (property_id, image_data, image_mime_type, image_url, image_order) VALUES ($1, $2, $3, $4, $5)',
+          [property.id, buffer, imageObj.mimeType || 'image/jpeg', imageObj.name || `image-${i}`, i]
         );
       }
     }
@@ -319,10 +326,44 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
   }
 });
 
+// @route   GET /api/properties/:id/images
+// @desc    Get property images as base64
+// @access  Public
+router.get('/:id/images', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `SELECT id, image_data, image_mime_type, image_order 
+       FROM property_images 
+       WHERE property_id = $1 
+       ORDER BY image_order`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ images: [] });
+    }
+
+    // Convert buffer to base64
+    const images = result.rows.map(img => ({
+      id: img.id,
+      data: 'data:' + (img.image_mime_type || 'image/jpeg') + ';base64,' + img.image_data.toString('base64'),
+      mimeType: img.image_mime_type,
+      order: img.image_order
+    }));
+
+    res.json({ images });
+  } catch (error) {
+    console.error('Get images error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // @route   PUT /api/properties/:id
 // @desc    Update property
 // @access  Private (Admin/Staff)
-router.put('/:id', authenticate, authorize('admin', 'staff'), uploadImages, async (req, res) => {
+router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -336,7 +377,8 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), uploadImages, asyn
       title, description, property_type, address, city, state, zip_code, country,
       latitude, longitude, area_sqft, bedrooms, bathrooms, floors,
       reserve_price, auction_date, auction_time, status, is_featured, is_active,
-      estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date
+      estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date,
+      images
     } = req.body;
 
     // Build update query dynamically
@@ -443,28 +485,43 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), uploadImages, asyn
       values.push(coverUrl);
     }
 
-    if (updates.length === 0) {
+    if (updates.length === 0 && (!images || images.length === 0)) {
       return res.status(400).json({ message: 'No fields to update' });
     }
 
     paramCount++;
     values.push(id);
 
-    const query = `UPDATE properties SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+    const query = `UPDATE properties SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramCount} RETURNING *`;
     const result = await pool.query(query, values);
 
-    // Handle new images
-    if (req.files?.images) {
-      for (let i = 0; i < req.files.images.length; i++) {
-        const imageUrl = req.files.images[i].secure_url || req.files.images[i].path || `/uploads/images/${req.files.images[i].filename}`;
-        const maxOrder = await pool.query(
-          'SELECT COALESCE(MAX(image_order), -1) + 1 as next_order FROM property_images WHERE property_id = $1',
-          [id]
-        );
-        await pool.query(
-          'INSERT INTO property_images (property_id, image_url, image_order) VALUES ($1, $2, $3)',
-          [id, imageUrl, maxOrder.rows[0].next_order]
-        );
+    // Handle new images (base64 from frontend)
+    if (images && images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        
+        // Check if it's a new image or existing
+        if (image.id) {
+          // Existing image - skip
+          continue;
+        }
+        
+        if (image.data) {
+          // New image with base64 data
+          const base64Data = image.data.split(',')[1] || image.data;
+          const buffer = Buffer.from(base64Data, 'base64');
+          const mimeType = image.mimeType || 'image/jpeg';
+          
+          const maxOrder = await pool.query(
+            'SELECT COALESCE(MAX(image_order), -1) + 1 as next_order FROM property_images WHERE property_id = $1',
+            [id]
+          );
+          
+          await pool.query(
+            'INSERT INTO property_images (property_id, image_url, image_data, image_mime_type, image_order) VALUES ($1, $2, $3, $4, $5)',
+            [id, `property_${id}_image_${i}`, buffer, mimeType, maxOrder.rows[0].next_order]
+          );
+        }
       }
     }
 
@@ -540,10 +597,15 @@ router.get('/:id', async (req, res) => {
 
     // Get images
     const imagesResult = await pool.query(
-      'SELECT id, image_url, image_order FROM property_images WHERE property_id = $1 ORDER BY image_order',
+      'SELECT id, image_url, image_data, image_mime_type, image_order FROM property_images WHERE property_id = $1 ORDER BY image_order',
       [id]
     );
-    property.images = imagesResult.rows;
+    property.images = imagesResult.rows.map(img => ({
+      id: img.id,
+      image_url: img.image_url,
+      image_data: img.image_data ? 'data:' + (img.image_mime_type || 'image/jpeg') + ';base64,' + img.image_data.toString('base64') : null,
+      image_order: img.image_order
+    }));
 
     // Increment view count
     await pool.query('UPDATE properties SET views_count = views_count + 1 WHERE id = $1', [id]);

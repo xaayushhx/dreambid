@@ -8,7 +8,7 @@ export const shareProperty = (property) => {
 };
 
 export const contactViaWhatsApp = (property, enquiry = null) => {
-  let message = `Hello, I'm interested in this property:\n\n${property.title}\nLocation: ${property.city}, ${property.state}\nReserve Price: ₹${parseFloat(property.reserve_price).toLocaleString('en-IN')}`;
+  let message = `Hello, I'm interested in this property:\n\nProperty ID: ${property.id}\nTitle: ${property.title}\nLocation: ${property.city}, ${property.state}\nReserve Price: ₹${parseFloat(property.reserve_price).toLocaleString('en-IN')}`;
   
   if (enquiry) {
     message += `\n\nMy Details:\nName: ${enquiry.name}\nEmail: ${enquiry.email}\nPhone: ${enquiry.phone}`;

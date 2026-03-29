@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS property_images (
   id SERIAL PRIMARY KEY,
   property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   image_url VARCHAR(500) NOT NULL,
+  image_data BYTEA,
+  image_mime_type VARCHAR(50) DEFAULT 'image/jpeg',
   image_order INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -105,7 +107,7 @@ CREATE TABLE IF NOT EXISTS enquiries (
   phone VARCHAR(20) NOT NULL,
   message TEXT,
   enquiry_type VARCHAR(50) DEFAULT 'general' CHECK (enquiry_type IN ('general', 'bid', 'inspection', 'complaint')),
-  status VARCHAR(50) DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'resolved', 'closed')),
+  status VARCHAR(50) DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'resolved', 'closed', 'not_interested', 'unable_to_connect', 'call_later')),
   property_title VARCHAR(255),
   property_address VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

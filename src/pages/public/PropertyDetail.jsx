@@ -6,6 +6,7 @@ import { contactViaWhatsApp, shareProperty } from '../../utils/whatsapp';
 import { getImageUrl } from '../../utils/imageUrl';
 import { formatNumber } from '../../utils/formatNumber';
 import { useShortlist } from '../../contexts/ShortlistContext';
+import { WhatsAppFloatContext } from '../../components/WhatsAppFloat';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import toast from 'react-hot-toast';
 import {
@@ -272,18 +273,19 @@ function PropertyDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-midnight-950">
+    <WhatsAppFloatContext.Provider value="calc(4rem + env(safe-area-inset-bottom, 0))">
+      <div className="min-h-screen bg-midnight-950">
       {/* Image Modal */}
       {showImageModal && ((property.images && property.images.length > 0) || property.cover_image_url) && (() => {
         const allImages = [];
         if (property.cover_image_url) {
-          allImages.push(property.cover_image_url);
+          allImages.push({ url: property.cover_image_url, data: null });
         }
         if (property.images && property.images.length > 0) {
           property.images.forEach(img => {
-            const imgUrl = typeof img === 'object' ? img.image_url : img;
+            const imgUrl = typeof img === 'object' ? (img.image_data || img.image_url) : img;
             if (imgUrl !== property.cover_image_url) {
-              allImages.push(imgUrl);
+              allImages.push({ url: imgUrl, data: img.image_data });
             }
           });
         }
@@ -330,7 +332,7 @@ function PropertyDetail() {
             )}
             <div className="max-w-7xl max-h-full" onClick={(e) => e.stopPropagation()}>
               <img
-                src={getImageUrl(currentImage)}
+                src={getImageUrl(currentImage.url, currentImage.data)}
                 alt={property.title}
                 className="max-w-full max-h-[90vh] object-contain rounded-lg"
                 onError={(e) => {
@@ -516,13 +518,13 @@ function PropertyDetail() {
             {((property.images && property.images.length > 0) || property.cover_image_url) && (() => {
               const allImages = [];
               if (property.cover_image_url) {
-                allImages.push(property.cover_image_url);
+                allImages.push({ url: property.cover_image_url, data: null });
               }
               if (property.images && property.images.length > 0) {
                 property.images.forEach(img => {
-                  const imgUrl = typeof img === 'object' ? img.image_url : img;
+                  const imgUrl = typeof img === 'object' ? (img.image_data || img.image_url) : img;
                   if (imgUrl !== property.cover_image_url) {
-                    allImages.push(imgUrl);
+                    allImages.push({ url: imgUrl, data: img.image_data });
                   }
                 });
               }
@@ -536,7 +538,7 @@ function PropertyDetail() {
                     {/* Main Carousel Display */}
                     <div className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
                       <img
-                        src={getImageUrl(allImages[carouselIndex])}
+                        src={getImageUrl(allImages[carouselIndex].url, allImages[carouselIndex].data)}
                         alt={`Property ${carouselIndex + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -605,7 +607,7 @@ function PropertyDetail() {
                               }`}
                             >
                               <img
-                                src={getImageUrl(img)}
+                                src={getImageUrl(img.url, img.data)}
                                 alt={`Thumbnail ${index + 1}`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
@@ -773,7 +775,7 @@ function PropertyDetail() {
                       <Link
                         key={prop.id}
                         to={`/properties/${prop.id}`}
-                        className="group flex-shrink-0 lg:flex-shrink w-64 lg:w-full hover:shadow-lg transition-shadow rounded-xl overflow-hidden border border-midnight-700 hover:border-midnight-600 hover:bg-midnight-800"
+                        className="group flex-shrink-0 lg:flex-shrink w-56 sm:w-64 lg:w-full hover:shadow-lg transition-shadow rounded-xl overflow-hidden border border-midnight-700 hover:border-midnight-600 hover:bg-midnight-800"
                       >
                         <div className="flex flex-col h-full">
                           {/* Property Image */}
@@ -850,10 +852,9 @@ function PropertyDetail() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Email *</label>
+                  <label className="block text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Email</label>
                   <input
                     type="email"
-                    required
                     value={enquiryForm.email}
                     onChange={(e) => setEnquiryForm({ ...enquiryForm, email: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-800 text-white rounded-xl border border-gray-700 focus:outline-none focus:border-[#dc2626] focus:ring-1 focus:ring-[#dc2626] text-sm"
@@ -1012,7 +1013,7 @@ function PropertyDetail() {
             I am interested
           </button>
           <button
-            onClick={() => navigate('/contact')}
+            onClick={handleWhatsAppContact}
             className="flex-1 px-4 py-3 bg-midnight-700 text-gold border border-gold rounded-lg hover:bg-midnight-600 transition font-semibold text-sm flex items-center justify-center gap-2"
           >
             <img src="/whatsapp.svg" alt="WhatsApp" className="w-5 h-5" />
@@ -1024,6 +1025,7 @@ function PropertyDetail() {
       {/* Spacer for mobile to prevent content overlap */}
       <div className="lg:hidden h-24" />
     </div>
+    </WhatsAppFloatContext.Provider>
   );
 }
 

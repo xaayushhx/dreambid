@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useContext, createContext } from 'react';
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '';
 const WHATSAPP_API_URL = 'https://api.whatsapp.com/send';
 
+export const WhatsAppFloatContext = createContext();
+
 export default function WhatsAppFloat() {
   const [isOpen, setIsOpen] = useState(false);
+  const bottomOffset = useContext(WhatsAppFloatContext) || 'calc(7rem + env(safe-area-inset-bottom, 0))';
 
   const handleWhatsAppClick = () => {
     const message = "Hello! I'm interested in learning more about your properties.";
@@ -14,10 +17,10 @@ export default function WhatsAppFloat() {
   };
 
   return (
-    <div className="fixed md:bottom-6 z-50" style={{ bottom: 'calc(10rem + env(safe-area-inset-bottom, 0))', right: 'max(1.5rem, env(safe-area-inset-right, 1.5rem))' }}>
+    <div className="fixed z-[60] md:bottom-6" style={{ bottom: bottomOffset, right: 'max(1.5rem, env(safe-area-inset-right, 1.5rem))' }}>
       {/* Tooltip */}
       {isOpen && (
-        <div className="absolute bottom-20 right-0 bg-gray-800 text-white rounded-lg px-4 py-2 mb-2 whitespace-nowrap text-sm shadow-lg animate-fadeIn">
+        <div className="absolute bottom-20 right-0 bg-gray-800 text-white rounded-lg px-4 py-2 mb-2 whitespace-nowrap text-sm shadow-lg animate-fadeIn z-[60]">
           Chat with us
         </div>
       )}

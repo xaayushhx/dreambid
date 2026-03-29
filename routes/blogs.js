@@ -121,7 +121,7 @@ router.post('/', authenticate, async (req, res) => {
       `INSERT INTO blogs (title, excerpt, content, category, author, image, read_time, status, created_by, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
        RETURNING *`,
-      [title, excerpt, content, category, author, image || null, readTime || null, status || 'draft', req.user.userId]
+      [title, excerpt, content, category, author, image || null, readTime || null, status || 'draft', req.userId]
     );
 
     res.status(201).json({

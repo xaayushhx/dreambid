@@ -45,6 +45,9 @@ function Enquiries() {
       case 'contacted': return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
       case 'resolved': return 'bg-green-500/20 text-green-300 border border-green-500/30';
       case 'closed': return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+      case 'not_interested': return 'bg-red-500/20 text-red-300 border border-red-500/30';
+      case 'unable_to_connect': return 'bg-orange-500/20 text-orange-300 border border-orange-500/30';
+      case 'call_later': return 'bg-purple-500/20 text-purple-300 border border-purple-500/30';
       default: return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
     }
   };
@@ -83,6 +86,9 @@ function Enquiries() {
             <option value="contacted">Contacted</option>
             <option value="resolved">Resolved</option>
             <option value="closed">Closed</option>
+            <option value="not_interested">Not Interested</option>
+            <option value="unable_to_connect">Unable to Connect</option>
+            <option value="call_later">Asked to Call Later</option>
           </select>
         </div>
 
@@ -197,6 +203,9 @@ function Enquiries() {
                   <option value="contacted">Contacted</option>
                   <option value="resolved">Resolved</option>
                   <option value="closed">Closed</option>
+                  <option value="not_interested">Not Interested</option>
+                  <option value="unable_to_connect">Unable to Connect</option>
+                  <option value="call_later">Asked to Call Later</option>
                 </select>
               </div>
 

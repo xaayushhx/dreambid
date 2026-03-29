@@ -124,7 +124,7 @@ function Dashboard() {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-text-primary">Recent Enquiries</h2>
             <Link
-              to="/enquiries"
+              to="/admin/enquiries"
               className="text-red-600 hover:text-red-700 text-sm font-medium"
             >
               View All →
