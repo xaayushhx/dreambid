@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { ArrowLeftIcon, CalendarIcon, UserIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
+import { getImageUrl } from '../../utils/imageUrl';
 
 function BlogDetail() {
   const { id } = useParams();
@@ -111,25 +112,30 @@ function BlogDetail() {
       {blog.image && (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
           <img
-            src={blog.image}
+            src={getImageUrl(blog.image)}
             alt={blog.title}
             className="w-full h-96 object-cover rounded-lg border border-midnight-700"
           />
         </div>
       )}
 
-      {/* Multiple Images Gallery */}
+      {/* Multiple Images Gallery - Show all images in grid */}
       {blog.images && blog.images.length > 0 && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-          <h3 className="text-xl font-semibold text-white mb-6">Gallery</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+          <h3 className="text-2xl font-bold text-white mb-8">Gallery ({blog.images.length} {blog.images.length === 1 ? 'image' : 'images'})</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {blog.images.map((img, idx) => (
-              <div key={idx} className="rounded-lg overflow-hidden border border-midnight-700">
-                <img
-                  src={img.image_data || img.image_url}
-                  alt={`Blog image ${idx + 1}`}
-                  className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
-                />
+              <div key={idx} className="group relative rounded-lg overflow-hidden border border-midnight-700 hover:border-gold transition-colors">
+                <div className="relative h-64 bg-midnight-700 overflow-hidden">
+                  <img
+                    src={getImageUrl(img.image_data || img.image_url)}
+                    alt={`Blog image ${idx + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-midnight-950 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <p className="text-gold text-sm font-medium">Image {idx + 1} of {blog.images.length}</p>
+                </div>
               </div>
             ))}
           </div>
