@@ -202,7 +202,7 @@ function Properties() {
                   {properties.map((property) => {
                     const imageUrl = property.cover_image_url || 
                       (property.images && property.images.length > 0 
-                        ? (typeof property.images[0] === 'object' ? property.images[0].image_url : property.images[0])
+                        ? (typeof property.images[0] === 'object' ? (property.images[0].image_data || property.images[0].image_url) : property.images[0])
                         : null);
                     const applicationDate = property.auction_date ? new Date(property.auction_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
 

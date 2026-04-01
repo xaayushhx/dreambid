@@ -63,16 +63,30 @@ function Home() {
     budget: '',
   });
 
-  // Handle carousel scroll
+  // Handle carousel scroll with snap to center
   const scrollCarousel = (direction) => {
     if (morePropertiesRef.current) {
-      const scrollAmount = 400; // Scroll distance in pixels
-      const currentScroll = morePropertiesRef.current.scrollLeft;
-      const targetScroll = direction === 'left' 
-        ? currentScroll - scrollAmount 
-        : currentScroll + scrollAmount;
+      const container = morePropertiesRef.current;
+      const cardElement = container.querySelector('[class*="flex-shrink-0"]');
       
-      morePropertiesRef.current.scrollTo({
+      if (!cardElement) return;
+      
+      // Get card width including gap
+      const cardWidth = cardElement.offsetWidth;
+      const style = window.getComputedStyle(container);
+      const gap = parseInt(style.gap) || 24; // Default gap value
+      const cardWithGap = cardWidth + gap;
+      
+      // Calculate container width and center position
+      const containerWidth = container.offsetWidth;
+      const currentScroll = container.scrollLeft;
+      
+      // Scroll to next/previous card
+      const scrollAmount = direction === 'left' ? -cardWithGap : cardWithGap;
+      const targetScroll = currentScroll + scrollAmount;
+      
+      // Snap to center of the viewport
+      container.scrollTo({
         left: targetScroll,
         behavior: 'smooth'
       });
@@ -481,7 +495,7 @@ function Home() {
               {featuredProperties.map((property) => {
                 const imageUrl = property.cover_image_url || 
                   (property.images && property.images.length > 0 
-                    ? (typeof property.images[0] === 'object' ? property.images[0].image_url : property.images[0])
+                    ? (typeof property.images[0] === 'object' ? (property.images[0].image_data || property.images[0].image_url) : property.images[0])
                     : null);
 
                 return (
@@ -606,17 +620,17 @@ function Home() {
               <div className="overflow-hidden rounded-lg">
                 <div 
                   ref={morePropertiesRef}
-                  className="flex gap-6 md:gap-8 overflow-x-auto scroll-smooth hide-scrollbar"
+                  className="flex gap-6 md:gap-8 overflow-x-auto scroll-smooth hide-scrollbar snap-x snap-mandatory"
                 >
                   {/* Display each property once */}
                   {properties.map((property, index) => {
                     const imageUrl = property.cover_image_url || 
                       (property.images && property.images.length > 0 
-                        ? (typeof property.images[0] === 'object' ? property.images[0].image_url : property.images[0])
+                        ? (typeof property.images[0] === 'object' ? (property.images[0].image_data || property.images[0].image_url) : property.images[0])
                         : null);
 
                     return (
-                      <div key={`${property.id}-${index}`} className="flex-shrink-0 w-80 md:w-96">
+                      <div key={`${property.id}-${index}`} className="flex-shrink-0 w-full sm:w-80 md:w-96 snap-center">
                         <div className="card overflow-hidden hover:shadow-2xl transition-all duration-300 h-full flex flex-col">
                           <div className="relative h-48 md:h-56 overflow-hidden bg-midnight-800">
                             {imageUrl ? (

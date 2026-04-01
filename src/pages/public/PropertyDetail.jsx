@@ -101,6 +101,7 @@ function PropertyDetail() {
     phone: '',
     message: '',
   });
+  const [phoneError, setPhoneError] = useState('');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showInfoWindow, setShowInfoWindow] = useState(true);
@@ -166,6 +167,14 @@ function PropertyDetail() {
 
   const handleEnquirySubmit = (e) => {
     e.preventDefault();
+    
+    // Validate phone number
+    if (!enquiryForm.phone.match(/^\d{10}$/)) {
+      setPhoneError('Phone number must be exactly 10 digits');
+      return;
+    }
+    
+    setPhoneError('');
     enquiryMutation.mutate({
       property_id: parseInt(id),
       ...enquiryForm,
@@ -278,17 +287,18 @@ function PropertyDetail() {
       {/* Image Modal */}
       {showImageModal && ((property.images && property.images.length > 0) || property.cover_image_url) && (() => {
         const allImages = [];
-        if (property.cover_image_url) {
+        if (property.cover_image_url && property.cover_image_url !== 'data:image/stored') {
           allImages.push({ url: property.cover_image_url, data: null });
         }
         if (property.images && property.images.length > 0) {
           property.images.forEach(img => {
             const imgUrl = typeof img === 'object' ? (img.image_data || img.image_url) : img;
-            if (imgUrl !== property.cover_image_url) {
+            if (imgUrl && imgUrl !== property.cover_image_url && imgUrl !== 'data:image/stored') {
               allImages.push({ url: imgUrl, data: img.image_data });
             }
           });
         }
+        if (allImages.length === 0) return null;
         const currentImage = allImages[selectedImageIndex] || allImages[0];
 
         return (
@@ -376,7 +386,7 @@ function PropertyDetail() {
                       </svg>
                     </button>
                     <button
-                      onClick={handleWhatsAppContact}
+                      onClick={() => contactViaWhatsApp(property)}
                       className="p-2 rounded-lg hover:bg-[#F7F9FC] transition-colors"
                     >
                       <img src="/whatsapp.svg" alt="WhatsApp" className="w-5 h-5" />
@@ -517,13 +527,14 @@ function PropertyDetail() {
             {/* Auto-Scrolling Carousel Section */}
             {((property.images && property.images.length > 0) || property.cover_image_url) && (() => {
               const allImages = [];
-              if (property.cover_image_url) {
+              if (property.cover_image_url && property.cover_image_url !== 'data:image/stored') {
                 allImages.push({ url: property.cover_image_url, data: null });
               }
               if (property.images && property.images.length > 0) {
                 property.images.forEach(img => {
                   const imgUrl = typeof img === 'object' ? (img.image_data || img.image_url) : img;
-                  if (imgUrl !== property.cover_image_url) {
+                  // Only add if URL exists and is not the cover image
+                  if (imgUrl && imgUrl !== property.cover_image_url && imgUrl !== 'data:image/stored') {
                     allImages.push({ url: imgUrl, data: img.image_data });
                   }
                 });
@@ -781,7 +792,10 @@ function PropertyDetail() {
                           {/* Property Image */}
                           <div className="h-40 overflow-hidden bg-midnight-800">
                             <img
-                              src={getImageUrl(prop.cover_image_url)}
+                              src={getImageUrl(prop.cover_image_url || 
+                                (prop.images && prop.images.length > 0 
+                                  ? (typeof prop.images[0] === 'object' ? (prop.images[0].image_data || prop.images[0].image_url) : prop.images[0])
+                                  : null))}
                               alt={prop.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               onError={(e) => {
@@ -845,20 +859,34 @@ function PropertyDetail() {
                   <input
                     type="tel"
                     required
+                    maxLength="10"
                     value={enquiryForm.phone}
-                    onChange={(e) => setEnquiryForm({ ...enquiryForm, phone: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-gray-800 text-white rounded-xl border border-gray-700 focus:outline-none focus:border-[#dc2626] focus:ring-1 focus:ring-[#dc2626] text-sm"
-                    placeholder="Enter phone number"
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      setEnquiryForm({ ...enquiryForm, phone: value });
+                      if (value && !value.match(/^\d{10}$/)) {
+                        setPhoneError(`Phone must be 10 digits (${value.length} entered)`);
+                      } else {
+                        setPhoneError('');
+                      }
+                    }}
+                    className={`w-full px-4 py-2.5 bg-gray-800 text-white rounded-xl border focus:outline-none focus:ring-1 transition ${
+                      phoneError 
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                        : 'border-gray-700 focus:border-[#dc2626] focus:ring-[#dc2626]'
+                    } text-sm`}
+                    placeholder="Enter 10-digit phone number"
                   />
+                  {phoneError && <p className="text-xs text-red-500 mt-1">{phoneError}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Email</label>
+                  <label className="block text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Email (Optional)</label>
                   <input
                     type="email"
                     value={enquiryForm.email}
                     onChange={(e) => setEnquiryForm({ ...enquiryForm, email: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-800 text-white rounded-xl border border-gray-700 focus:outline-none focus:border-[#dc2626] focus:ring-1 focus:ring-[#dc2626] text-sm"
-                    placeholder="Enter email address"
+                    placeholder="Enter email address (optional)"
                   />
                 </div>
                 <div>
@@ -957,7 +985,7 @@ function PropertyDetail() {
                 </div>
 
                 <button
-                  onClick={handleWhatsAppContact}
+                  onClick={() => contactViaWhatsApp(property)}
                   className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition font-semibold text-sm flex items-center justify-center gap-2"
                 >
                   <img src="/whatsapp.svg" alt="WhatsApp" className="w-5 h-5" />

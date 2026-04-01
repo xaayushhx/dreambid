@@ -12,8 +12,8 @@ const router = express.Router();
 router.post('/', [
   body('property_id').isInt(),
   body('name').trim().notEmpty(),
-  body('email').isEmail().normalizeEmail(),
-  body('phone').trim().notEmpty(),
+  body('email').optional().isEmail().normalizeEmail(),
+  body('phone').trim().notEmpty().matches(/^\d{10}$/).withMessage('Phone number must be exactly 10 digits'),
   body('message').optional().trim(),
 ], async (req, res) => {
   try {
@@ -24,11 +24,13 @@ router.post('/', [
 
     const { property_id, name, email, phone, message, enquiry_type = 'general' } = req.body;
 
-    // Check if property exists
-    const propertyCheck = await pool.query('SELECT id FROM properties WHERE id = $1 AND is_active = true', [property_id]);
+    // Check if property exists and fetch its details
+    const propertyCheck = await pool.query('SELECT id, title, address FROM properties WHERE id = $1 AND is_active = true', [property_id]);
     if (propertyCheck.rows.length === 0) {
       return res.status(404).json({ message: 'Property not found' });
     }
+
+    const propertyData = propertyCheck.rows[0];
 
     // Get user ID if authenticated
     let userId = null;
@@ -42,12 +44,12 @@ router.post('/', [
       }
     }
 
-    // Create enquiry
+    // Create enquiry with property details
     const result = await pool.query(
-      `INSERT INTO enquiries (property_id, user_id, name, email, phone, message, enquiry_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO enquiries (property_id, user_id, name, email, phone, message, enquiry_type, property_title, property_address)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [property_id, userId, name, email, phone, message || null, enquiry_type]
+      [property_id, userId, name, email, phone, message || null, enquiry_type, propertyData.title, propertyData.address]
     );
 
     // Increment enquiries count
@@ -64,7 +66,7 @@ router.post('/', [
 // @desc    Get all enquiries (admin/staff only)
 // @access  Private (Admin/Staff)
 router.get('/', authenticate, authorize('admin', 'staff'), [
-  query('status').optional().isIn(['new', 'contacted', 'resolved', 'closed']),
+  query('status').optional().isIn(['new', 'contacted', 'resolved', 'closed', 'not_interested', 'unable_to_connect', 'call_later']),
   query('property_id').optional().isInt(),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 1000 }),
@@ -78,7 +80,9 @@ router.get('/', authenticate, authorize('admin', 'staff'), [
     const { status, property_id, page = 1, limit = 20 } = req.query;
 
     let query = `
-      SELECT e.*, p.title as property_title, p.address as property_address
+      SELECT e.*,
+             COALESCE(e.property_title, p.title) as property_title,
+             COALESCE(e.property_address, p.address) as property_address
       FROM enquiries e
       LEFT JOIN properties p ON e.property_id = p.id
       WHERE 1=1
@@ -132,9 +136,9 @@ router.get('/', authenticate, authorize('admin', 'staff'), [
 // @route   PUT /api/enquiries/:id/status
 // @desc    Update enquiry status
 // @access  Private (Admin/Staff)
-router.put('/:id/status', authenticate, authorize('admin', 'staff'), [
-  body('status').isIn(['new', 'contacted', 'resolved', 'closed']),
-], async (req, res) => {
+router.put('/:id/status', authenticate, authorize('admin', 'staff'),
+  body('status').isIn(['new', 'contacted', 'resolved', 'closed', 'not_interested', 'unable_to_connect', 'call_later']),
+  async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

@@ -90,9 +90,18 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Blog not found' });
     }
 
+    // Fetch associated images
+    const imagesResult = await pool.query(
+      'SELECT * FROM blog_images WHERE blog_id = $1 ORDER BY image_order ASC',
+      [id]
+    );
+
     res.json({
       message: 'Blog fetched successfully',
-      data: result.rows[0]
+      data: {
+        ...result.rows[0],
+        images: imagesResult.rows
+      }
     });
   } catch (error) {
     console.error('Error fetching blog:', error);
@@ -110,23 +119,45 @@ router.post('/', authenticate, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized - Admin access required' });
     }
 
-    const { title, excerpt, content, category, author, image, readTime, status } = req.body;
+    const { title, excerpt, content, category, author, image, images, readTime, status } = req.body;
 
     // Validate required fields
     if (!title || !excerpt || !content || !category || !author) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
+    // Use first image from images array or fallback to single image
+    const mainImage = (images && images.length > 0) ? images[0] : (image || null);
+
     const result = await pool.query(
       `INSERT INTO blogs (title, excerpt, content, category, author, image, read_time, status, created_by, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
        RETURNING *`,
-      [title, excerpt, content, category, author, image || null, readTime || null, status || 'draft', req.userId]
+      [title, excerpt, content, category, author, mainImage || null, readTime || null, status || 'draft', req.userId]
     );
+
+    const blogId = result.rows[0].id;
+    let blogImages = [];
+
+    // Insert multiple images if provided
+    if (images && images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        const imageResult = await pool.query(
+          `INSERT INTO blog_images (blog_id, image_data, image_order)
+           VALUES ($1, $2, $3)
+           RETURNING *`,
+          [blogId, images[i], i]
+        );
+        blogImages.push(imageResult.rows[0]);
+      }
+    }
 
     res.status(201).json({
       message: 'Blog created successfully',
-      data: result.rows[0]
+      data: {
+        ...result.rows[0],
+        images: blogImages
+      }
     });
   } catch (error) {
     console.error('Error creating blog:', error);
@@ -137,15 +168,11 @@ router.post('/', authenticate, async (req, res) => {
 // @route   PUT /api/blogs/:id
 // @desc    Update a blog (admin only)
 // @access  Admin
-router.put('/:id', authenticate, async (req, res) => {
+router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) => {
   try {
-    // Check if user is admin
-    if (req.user.role !== 'admin' && req.user.role !== 'staff') {
-      return res.status(403).json({ message: 'Unauthorized - Admin access required' });
-    }
 
     const { id } = req.params;
-    const { title, excerpt, content, category, author, image, readTime, status } = req.body;
+    const { title, excerpt, content, category, author, image, images, readTime, status } = req.body;
 
     // Check if blog exists
     const blogExists = await pool.query('SELECT id FROM blogs WHERE id = $1', [id]);
@@ -153,25 +180,57 @@ router.put('/:id', authenticate, async (req, res) => {
       return res.status(404).json({ message: 'Blog not found' });
     }
 
+    // Use first image from images array or fallback to single image
+    const mainImage = (images && images.length > 0) ? images[0] : (image || null);
+
     const result = await pool.query(
       `UPDATE blogs 
-       SET title = COALESCE($2, title),
-           excerpt = COALESCE($3, excerpt),
-           content = COALESCE($4, content),
-           category = COALESCE($5, category),
-           author = COALESCE($6, author),
-           image = COALESCE($7, image),
-           read_time = COALESCE($8, read_time),
-           status = COALESCE($9, status),
+       SET title = $2,
+           excerpt = $3,
+           content = $4,
+           category = $5,
+           author = $6,
+           image = $7,
+           read_time = $8,
+           status = $9,
            updated_at = NOW()
        WHERE id = $1
        RETURNING *`,
-      [id, title, excerpt, content, category, author, image || null, readTime || null, status]
+      [id, title || null, excerpt || null, content || null, category || null, author || null, mainImage || null, readTime || null, status || null]
     );
+
+    let blogImages = [];
+
+    // Update images if provided
+    if (images && images.length > 0) {
+      // Delete old images
+      await pool.query('DELETE FROM blog_images WHERE blog_id = $1', [id]);
+      
+      // Insert new images
+      for (let i = 0; i < images.length; i++) {
+        const imageResult = await pool.query(
+          `INSERT INTO blog_images (blog_id, image_data, image_order)
+           VALUES ($1, $2, $3)
+           RETURNING *`,
+          [id, images[i], i]
+        );
+        blogImages.push(imageResult.rows[0]);
+      }
+    } else {
+      // Fetch existing images if not updating
+      const imagesResult = await pool.query(
+        'SELECT * FROM blog_images WHERE blog_id = $1 ORDER BY image_order ASC',
+        [id]
+      );
+      blogImages = imagesResult.rows;
+    }
 
     res.json({
       message: 'Blog updated successfully',
-      data: result.rows[0]
+      data: {
+        ...result.rows[0],
+        images: blogImages
+      }
     });
   } catch (error) {
     console.error('Error updating blog:', error);
@@ -182,12 +241,8 @@ router.put('/:id', authenticate, async (req, res) => {
 // @route   DELETE /api/blogs/:id
 // @desc    Delete a blog (admin only)
 // @access  Admin
-router.delete('/:id', authenticate, async (req, res) => {
+router.delete('/:id', authenticate, authorize('admin', 'staff'), async (req, res) => {
   try {
-    // Check if user is admin
-    if (req.user.role !== 'admin' && req.user.role !== 'staff') {
-      return res.status(403).json({ message: 'Unauthorized - Admin access required' });
-    }
 
     const { id } = req.params;
 

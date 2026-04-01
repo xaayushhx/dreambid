@@ -53,7 +53,10 @@ function Shortlisted() {
         className="relative overflow-hidden bg-midnight-800 aspect-video block"
       >
         <img
-          src={getImageUrl(property.cover_image_url)}
+          src={getImageUrl(property.cover_image_url || 
+            (property.images && property.images.length > 0 
+              ? (typeof property.images[0] === 'object' ? (property.images[0].image_data || property.images[0].image_url) : property.images[0])
+              : null))}
           alt={property.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {

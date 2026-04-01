@@ -121,7 +121,7 @@ function Blogs() {
                   <div className="flex items-center gap-4 text-xs text-text-muted mb-4 pb-4 border-b border-midnight-700">
                     <div className="flex items-center gap-1">
                       <CalendarIcon className="w-4 h-4" />
-                      {new Date(blog.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      {new Date(blog.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                     </div>
                     <div className="flex items-center gap-1">
                       <UserIcon className="w-4 h-4" />
