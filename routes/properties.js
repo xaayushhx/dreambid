@@ -275,16 +275,18 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
       coverImage
     } = req.body;
 
-    // Determine cover image URL
+    // Determine cover image - store as reference, not full base64 data
     let coverImageUrl = null;
+    let coverImageIndex = null;
     if (images && Array.isArray(images) && images.length > 0) {
       if (coverImage && coverImage.type === 'new' && coverImage.index !== undefined) {
-        // Use the selected new image as cover
-        const selectedImage = images[coverImage.index];
-        coverImageUrl = selectedImage?.data || null;
+        // Use the selected new image as cover - store index for later reference
+        coverImageIndex = coverImage.index;
+        coverImageUrl = null; // Will be set after images are saved
       } else if (!coverImage || coverImage.type === 'new') {
         // If no cover image selected or trying to use non-existent new image, use first image
-        coverImageUrl = images[0]?.data || null;
+        coverImageIndex = 0;
+        coverImageUrl = null; // Will be set after images are saved
       }
     }
 
@@ -332,6 +334,22 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
         await pool.query(
           'INSERT INTO property_images (property_id, image_data, image_mime_type, image_url, image_order) VALUES ($1, $2, $3, $4, $5)',
           [property.id, buffer, imageObj.mimeType || 'image/jpeg', imageObj.name || `image-${i}`, i]
+        );
+      }
+
+      // If a specific image was marked as cover, update the cover_image_url
+      if (coverImageIndex !== null && images[coverImageIndex]) {
+        const coverImageObj = images[coverImageIndex];
+        let coverBase64 = coverImageObj.data;
+        if (coverBase64.startsWith('data:')) {
+          coverBase64 = coverBase64.split(',')[1];
+        }
+        const mimeType = coverImageObj.mimeType || 'image/jpeg';
+        const coverUrl = `data:${mimeType};base64,${coverBase64.substring(0, 450)}`; // Truncate to fit 500 char limit
+        
+        await pool.query(
+          'UPDATE properties SET cover_image_url = $1 WHERE id = $2',
+          [coverUrl, property.id]
         );
       }
     }
