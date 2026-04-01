@@ -168,12 +168,31 @@ function PropertyForm() {
         });
       }
 
+      // Determine cover image
+      let coverImageSelection = null;
+      if (coverImageId) {
+        if (typeof coverImageId === 'string' && coverImageId.startsWith('new-')) {
+          // Cover is from new images
+          const newImageIndex = parseInt(coverImageId.split('-')[1]);
+          coverImageSelection = {
+            type: 'new',
+            index: newImageIndex
+          };
+        } else {
+          // Cover is from existing images (edit mode)
+          coverImageSelection = {
+            type: 'existing',
+            id: coverImageId
+          };
+        }
+      }
+
       // Create submit data object
       const submitData = {
         ...formData,
         images: imageDataArray,
+        ...(coverImageSelection && { coverImage: coverImageSelection }),
         ...(isEdit && {
-          coverImageId: coverImageId,
           removeImageIds: imagesToRemove
         })
       };
@@ -585,6 +604,60 @@ function PropertyForm() {
               </div>
             </div>
           )}
+
+          {/* New Images Preview */}
+          {images.length > 0 && (
+            <div className="mb-6">
+              <p className="text-sm text-text-secondary mb-3">
+                {isEdit ? 'New Images to Add:' : 'Images to Upload:'}
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {images.map((img, index) => (
+                  <div key={index} className="relative group">
+                    <div className="relative h-24 w-24 rounded-lg overflow-hidden border-2 border-gold border-dashed hover:border-gold transition-colors bg-midnight-700">
+                      <img
+                        src={img.data}
+                        alt={`Preview ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                      {coverImageId === `new-${index}` && (
+                        <div className="absolute inset-0 bg-gold bg-opacity-30 flex items-center justify-center">
+                          <span className="text-xs font-bold text-white bg-gold px-2 py-1 rounded">Cover</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity flex flex-col items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCoverImageId(`new-${index}`)}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${
+                          coverImageId === `new-${index}`
+                            ? 'bg-gold text-midnight-950'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                      >
+                        {coverImageId === `new-${index}` ? 'Cover' : 'Set Cover'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImages(images.filter((_, i) => i !== index));
+                          // Clear cover image if this was the selected cover
+                          if (coverImageId === `new-${index}`) {
+                            setCoverImageId(null);
+                          }
+                        }}
+                        className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">
               Add New Images

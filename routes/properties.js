@@ -271,14 +271,21 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
       emd,
       possession_type,
       application_end_date,
-      images
+      images,
+      coverImage
     } = req.body;
 
-    // Use first image as cover image URL (prefer real base64 URL)
+    // Determine cover image URL
     let coverImageUrl = null;
     if (images && Array.isArray(images) && images.length > 0) {
-      const firstImage = images[0];
-      coverImageUrl = firstImage?.data || firstImage?.image_url || null;
+      if (coverImage && coverImage.type === 'new' && coverImage.index !== undefined) {
+        // Use the selected new image as cover
+        const selectedImage = images[coverImage.index];
+        coverImageUrl = selectedImage?.data || null;
+      } else if (!coverImage || coverImage.type === 'new') {
+        // If no cover image selected or trying to use non-existent new image, use first image
+        coverImageUrl = images[0]?.data || null;
+      }
     }
 
     // Create property
@@ -388,7 +395,7 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       latitude, longitude, area_sqft, bedrooms, bathrooms, floors,
       reserve_price, auction_date, auction_time, status, is_featured, is_active,
       estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date,
-      images, coverImageId, removeImageIds
+      images, coverImageId, removeImageIds, coverImage
     } = req.body;
 
     // Build update query dynamically
@@ -487,12 +494,35 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       values.push(application_end_date ? new Date(application_end_date) : null);
     }
 
-    // Handle cover image based on coverImageId
+    // Handle cover image based on coverImageId or coverImage
     if (coverImageId !== undefined && coverImageId !== null) {
       // Get the image data for the selected cover image
       const coverImgResult = await pool.query(
         'SELECT image_data, image_mime_type FROM property_images WHERE id = $1 AND property_id = $2',
         [coverImageId, id]
+      );
+      
+      if (coverImgResult.rows.length > 0) {
+        const coverImg = coverImgResult.rows[0];
+        paramCount++;
+        updates.push(`cover_image_url = $${paramCount}`);
+        // Store as base64 data URL
+        const mimeType = coverImg.image_mime_type || 'image/jpeg';
+        const base64Data = coverImg.image_data.toString('base64');
+        values.push(`data:${mimeType};base64,${base64Data}`);
+      }
+    } else if (coverImage && coverImage.type === 'new' && coverImage.index !== undefined) {
+      // Cover image is from newly added images
+      if (images && images[coverImage.index]) {
+        paramCount++;
+        updates.push(`cover_image_url = $${paramCount}`);
+        values.push(images[coverImage.index].data); // Use base64 data directly
+      }
+    } else if (coverImage && coverImage.type === 'existing' && coverImage.id) {
+      // Cover image is existing - same as coverImageId
+      const coverImgResult = await pool.query(
+        'SELECT image_data, image_mime_type FROM property_images WHERE id = $1 AND property_id = $2',
+        [coverImage.id, id]
       );
       
       if (coverImgResult.rows.length > 0) {
