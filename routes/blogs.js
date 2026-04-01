@@ -112,13 +112,8 @@ router.get('/:id', async (req, res) => {
 // @route   POST /api/blogs
 // @desc    Create a new blog (admin only)
 // @access  Admin
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, authorize('admin', 'staff'), async (req, res) => {
   try {
-    // Check if user is admin
-    if (req.user.role !== 'admin' && req.user.role !== 'staff') {
-      return res.status(403).json({ message: 'Unauthorized - Admin access required' });
-    }
-
     const { title, excerpt, content, category, author, image, images, readTime, status } = req.body;
 
     // Validate required fields
