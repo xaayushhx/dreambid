@@ -135,9 +135,12 @@ function Properties() {
                   <tr key={property.id} className="hover:bg-midnight-800 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        {property.cover_image_url && (
+                        {(property.cover_image_url || (property.images && property.images.length > 0)) && (
                           <img
-                            src={getImageUrl(property.cover_image_url)}
+                            src={getImageUrl(property.cover_image_url || 
+                              (property.images && property.images.length > 0 
+                                ? (typeof property.images[0] === 'object' ? (property.images[0].image_data || property.images[0].image_url) : property.images[0])
+                                : null))}
                             alt={property.title}
                             className="h-12 w-12 rounded object-cover mr-3"
                           />

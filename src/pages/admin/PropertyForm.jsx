@@ -45,7 +45,8 @@ function PropertyForm() {
 
   const [images, setImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
-  const [pdfFile, setPdfFile] = useState(null);
+  const [coverImageId, setCoverImageId] = useState(null);
+  const [imagesToRemove, setImagesToRemove] = useState([]);
 
   useEffect(() => {
     if (propertyData?.data?.property) {
@@ -75,6 +76,10 @@ function PropertyForm() {
         application_end_date: prop.application_end_date ? prop.application_end_date.split('T')[0] : '',
       });
       setExistingImages(prop.images || []);
+      // Set first image as default cover image
+      if (prop.images && prop.images.length > 0) {
+        setCoverImageId(prop.images[0].id);
+      }
     }
   }, [propertyData]);
 
@@ -129,10 +134,6 @@ function PropertyForm() {
     }
   };
 
-  const handlePdfChange = (e) => {
-    setPdfFile(e.target.files[0]);
-  };
-
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -140,6 +141,16 @@ function PropertyForm() {
       reader.onload = () => resolve(reader.result);
       reader.onerror = (error) => reject(error);
     });
+  };
+
+  const handleRemoveExistingImage = (imageId) => {
+    setExistingImages(prev => prev.filter(img => img.id !== imageId));
+    setImagesToRemove(prev => [...prev, imageId]);
+    // Clear cover image if it was the removed one
+    if (coverImageId === imageId) {
+      const remainingImages = existingImages.filter(img => img.id !== imageId);
+      setCoverImageId(remainingImages.length > 0 ? remainingImages[0].id : null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -160,7 +171,11 @@ function PropertyForm() {
       // Create submit data object
       const submitData = {
         ...formData,
-        images: imageDataArray
+        images: imageDataArray,
+        ...(isEdit && {
+          coverImageId: coverImageId,
+          removeImageIds: imagesToRemove
+        })
       };
 
       if (isEdit) {
@@ -528,21 +543,52 @@ function PropertyForm() {
         <div>
           <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Images</h2>
           {existingImages.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm text-text-secondary mb-2">Existing Images:</p>
-              <div className="flex flex-wrap gap-2">
-                {existingImages.map((img, idx) => (
-                  <img
-                    key={idx}
-                    src={getImageUrl(img.image_url)}
-                    alt={`Property ${idx + 1}`}
-                    className="h-20 w-20 object-cover rounded"
-                  />
+            <div className="mb-6">
+              <p className="text-sm text-text-secondary mb-3">Existing Images:</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {existingImages.map((img) => (
+                  <div key={img.id} className="relative group">
+                    <div className="relative h-24 w-24 rounded-lg overflow-hidden border-2 border-midnight-600 hover:border-gold transition-colors">
+                      <img
+                        src={img.image_data || getImageUrl(img.image_url)}
+                        alt={`Property image`}
+                        className="h-full w-full object-cover"
+                      />
+                      {coverImageId === img.id && (
+                        <div className="absolute inset-0 bg-gold bg-opacity-30 flex items-center justify-center">
+                          <span className="text-xs font-bold text-white bg-gold px-2 py-1 rounded">Cover</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity flex flex-col items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCoverImageId(img.id)}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${
+                          coverImageId === img.id
+                            ? 'bg-gold text-midnight-950'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                      >
+                        {coverImageId === img.id ? 'Cover' : 'Set Cover'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExistingImage(img.id)}
+                        className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           )}
           <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">
+              Add New Images
+            </label>
             <input
               type="file"
               accept="image/*"
@@ -551,21 +597,10 @@ function PropertyForm() {
               className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
             />
             <div className="mt-2 flex justify-between text-sm">
-              <p className="text-text-muted">First image will be used as cover image</p>
+              <p className="text-text-muted">You can select up to 20 images</p>
               <p className="text-text-primary font-medium">Images selected: {images.length} / 20</p>
             </div>
           </div>
-        </div>
-
-        {/* PDF */}
-        <div>
-          <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Property Brochure (PDF)</h2>
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={handlePdfChange}
-            className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-          />
         </div>
 
         {/* Submit Buttons */}

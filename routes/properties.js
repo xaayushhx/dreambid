@@ -206,6 +206,12 @@ router.get('/', [
         image_data: img.image_data ? 'data:' + (img.image_mime_type || 'image/jpeg') + ';base64,' + img.image_data.toString('base64') : null,
         image_order: img.image_order
       }));
+
+      // Set cover image to first uploaded image if no URL or placeholder
+      const firstImage = property.images.find(img => img.image_data || img.image_url);
+      if (firstImage && (!property.cover_image_url || property.cover_image_url === 'data:image/stored')) {
+        property.cover_image_url = firstImage.image_data || firstImage.image_url;
+      }
     }
 
     res.json({
@@ -268,8 +274,12 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
       images
     } = req.body;
 
-    // Use first image as cover image URL (placeholder or base64 reference)
-    let coverImageUrl = images && images.length > 0 ? 'data:image/stored' : null;
+    // Use first image as cover image URL (prefer real base64 URL)
+    let coverImageUrl = null;
+    if (images && Array.isArray(images) && images.length > 0) {
+      const firstImage = images[0];
+      coverImageUrl = firstImage?.data || firstImage?.image_url || null;
+    }
 
     // Create property
     const propertyResult = await pool.query(
@@ -378,7 +388,7 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       latitude, longitude, area_sqft, bedrooms, bathrooms, floors,
       reserve_price, auction_date, auction_time, status, is_featured, is_active,
       estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date,
-      images
+      images, coverImageId, removeImageIds
     } = req.body;
 
     // Build update query dynamically
@@ -477,7 +487,27 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       values.push(application_end_date ? new Date(application_end_date) : null);
     }
 
+    // Handle cover image based on coverImageId
+    if (coverImageId !== undefined && coverImageId !== null) {
+      // Get the image data for the selected cover image
+      const coverImgResult = await pool.query(
+        'SELECT image_data, image_mime_type FROM property_images WHERE id = $1 AND property_id = $2',
+        [coverImageId, id]
+      );
+      
+      if (coverImgResult.rows.length > 0) {
+        const coverImg = coverImgResult.rows[0];
+        paramCount++;
+        updates.push(`cover_image_url = $${paramCount}`);
+        // Store as base64 data URL
+        const mimeType = coverImg.image_mime_type || 'image/jpeg';
+        const base64Data = coverImg.image_data.toString('base64');
+        values.push(`data:${mimeType};base64,${base64Data}`);
+      }
+    }
+
     // Handle cover image
+
     if (req.files?.cover_image?.[0]) {
       paramCount++;
       updates.push(`cover_image_url = $${paramCount}`);
@@ -485,7 +515,7 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       values.push(coverUrl);
     }
 
-    if (updates.length === 0 && (!images || images.length === 0)) {
+    if (updates.length === 0 && (!images || images.length === 0) && (!removeImageIds || removeImageIds.length === 0)) {
       return res.status(400).json({ message: 'No fields to update' });
     }
 
@@ -494,6 +524,16 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
 
     const query = `UPDATE properties SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramCount} RETURNING *`;
     const result = await pool.query(query, values);
+
+    // Handle removed images
+    if (removeImageIds && removeImageIds.length > 0) {
+      for (const imageId of removeImageIds) {
+        await pool.query(
+          'DELETE FROM property_images WHERE id = $1 AND property_id = $2',
+          [imageId, id]
+        );
+      }
+    }
 
     // Handle new images (base64 from frontend)
     if (images && images.length > 0) {
@@ -606,6 +646,12 @@ router.get('/:id', async (req, res) => {
       image_data: img.image_data ? 'data:' + (img.image_mime_type || 'image/jpeg') + ';base64,' + img.image_data.toString('base64') : null,
       image_order: img.image_order
     }));
+
+    // Set cover image when image data exists and cover is placeholder
+    const firstImage = property.images.find(img => img.image_data || img.image_url);
+    if (firstImage && (!property.cover_image_url || property.cover_image_url === 'data:image/stored')) {
+      property.cover_image_url = firstImage.image_data || firstImage.image_url;
+    }
 
     // Increment view count
     await pool.query('UPDATE properties SET views_count = views_count + 1 WHERE id = $1', [id]);

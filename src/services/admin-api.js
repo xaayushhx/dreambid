@@ -83,5 +83,15 @@ export const userRegistrationsAPI = {
   create: (data) => api.post('/user-registrations', data),
 };
 
+// Blogs API
+export const blogsAPI = {
+  getAll: (params) => api.get('/blogs', { params }),
+  getById: (id) => api.get(`/blogs/${id}`),
+  create: (data) => api.post('/blogs', data),
+  update: (id, data) => api.put(`/blogs/${id}`, data),
+  delete: (id) => api.delete(`/blogs/${id}`),
+  getConfig: () => api.get('/blogs/config/meta'),
+};
+
 export default api;
 

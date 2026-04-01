@@ -162,6 +162,18 @@ CREATE TABLE IF NOT EXISTS blogs (
 );
 
 -- ============================================================
+-- 7B. BLOG IMAGES TABLE - Multiple images per blog
+-- ============================================================
+CREATE TABLE IF NOT EXISTS blog_images (
+  id SERIAL PRIMARY KEY,
+  blog_id INTEGER NOT NULL REFERENCES blogs(id) ON DELETE CASCADE,
+  image_url VARCHAR(500) NOT NULL,
+  image_data TEXT,
+  image_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================================
 -- 8. USER REGISTRATIONS TABLE - Register page submissions
 -- ============================================================
 CREATE TABLE IF NOT EXISTS user_registrations (
@@ -195,6 +207,9 @@ CREATE INDEX IF NOT EXISTS idx_properties_created_at ON properties(created_at DE
 
 -- Property Images indexes
 CREATE INDEX IF NOT EXISTS idx_property_images_property_id ON property_images(property_id);
+
+-- Blog Images indexes
+CREATE INDEX IF NOT EXISTS idx_blog_images_blog_id ON blog_images(blog_id);
 
 -- Enquiries indexes
 CREATE INDEX IF NOT EXISTS idx_enquiries_property_id ON enquiries(property_id);

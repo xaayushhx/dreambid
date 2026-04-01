@@ -93,7 +93,7 @@ function BlogDetail() {
         <div className="flex flex-wrap items-center gap-6 text-text-secondary mb-8 pb-8 border-b border-midnight-700">
           <div className="flex items-center gap-2">
             <CalendarIcon className="w-5 h-5" />
-            {new Date(blog.createdAt).toLocaleDateString('en-US', {
+            {new Date(blog.created_at).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric',
@@ -176,7 +176,7 @@ function BlogDetail() {
                   <div className="flex items-center gap-4 text-xs text-text-muted mb-4 pb-4 border-b border-midnight-700">
                     <div className="flex items-center gap-1">
                       <CalendarIcon className="w-4 h-4" />
-                      {new Date(relatedBlog.createdAt).toLocaleDateString('en-US', {
+                      {new Date(relatedBlog.created_at).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',

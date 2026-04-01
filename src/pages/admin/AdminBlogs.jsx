@@ -11,7 +11,8 @@ function AdminBlogs() {
 
   const [editingBlog, setEditingBlog] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [images, setImages] = useState([]);
   const [categories, setCategories] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [configLoading, setConfigLoading] = useState(true);
@@ -73,7 +74,8 @@ function AdminBlogs() {
   const handleOpenForm = (blog = null) => {
     if (blog) {
       setFormData(blog);
-      setImagePreview(blog.image);
+      setImagePreviews(blog.image ? [blog.image] : []);
+      setImages([]);
       setEditingBlog(blog.id);
     } else {
       setFormData({
@@ -86,7 +88,8 @@ function AdminBlogs() {
         image: '',
         status: defaultStatus
       });
-      setImagePreview(null);
+      setImagePreviews([]);
+      setImages([]);
       setEditingBlog(null);
     }
     setIsFormOpen(true);
@@ -95,35 +98,39 @@ function AdminBlogs() {
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingBlog(null);
-    setImagePreview(null);
+    setImagePreviews([]);
+    setImages([]);
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const uploadedFiles = Array.from(e.target.files);
+    
+    uploadedFiles.forEach(file => {
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size should be less than 5MB');
+        toast.error(`${file.name} is too large (max 5MB)`);
         return;
       }
 
       // Check file type
       if (!file.type.startsWith('image/')) {
-        toast.error('Please select a valid image file');
+        toast.error(`${file.name} is not a valid image file`);
         return;
       }
 
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64String = event.target.result;
-        setFormData(prev => ({
-          ...prev,
-          image: base64String
-        }));
-        setImagePreview(base64String);
+        setImages(prev => [...prev, { file, data: base64String }]);
+        setImagePreviews(prev => [...prev, base64String]);
       };
       reader.readAsDataURL(file);
-    }
+    });
+  };
+
+  const removeImage = (index) => {
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleInputChange = (e) => {
@@ -134,8 +141,10 @@ function AdminBlogs() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, statusOverride = null) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
     
     if (!formData.title || !formData.author || !formData.excerpt || !formData.content) {
       toast.error('Please fill in all required fields');
@@ -143,13 +152,19 @@ function AdminBlogs() {
     }
 
     try {
+      const submitData = {
+        ...formData,
+        status: statusOverride || formData.status,
+        images: imagePreviews // Send all images
+      };
+
       if (editingBlog) {
         // Update existing blog via API
-        await api.put(`/blogs/${editingBlog}`, formData);
+        await api.put(`/blogs/${editingBlog}`, submitData);
         toast.success('Blog updated successfully');
       } else {
         // Create new blog via API
-        await api.post('/blogs', formData);
+        await api.post('/blogs', submitData);
         toast.success('Blog created successfully');
       }
 
@@ -241,7 +256,7 @@ function AdminBlogs() {
                   </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={(e) => handleSubmit(e)} className="space-y-4">
                   {/* Title */}
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -358,30 +373,35 @@ function AdminBlogs() {
                   {/* Image Upload */}
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-2">
-                      Blog Image
+                      Blog Images (Multiple Supported)
                     </label>
                     
-                    {/* Image Preview */}
-                    {imagePreview && (
+                    {/* Image Previews */}
+                    {imagePreviews.length > 0 && (
                       <div className="mb-4">
-                        <img 
-                          src={imagePreview} 
-                          alt="Preview" 
-                          className="w-full h-40 object-cover rounded-lg border border-midnight-600"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImagePreview(null);
-                            setFormData(prev => ({
-                              ...prev,
-                              image: ''
-                            }));
-                          }}
-                          className="mt-2 text-sm text-red-400 hover:text-red-300 transition"
-                        >
-                          Remove Image
-                        </button>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {imagePreviews.map((preview, idx) => (
+                            <div key={idx} className="relative group">
+                              <img 
+                                src={preview} 
+                                alt={`Preview ${idx + 1}`} 
+                                className="w-full h-32 object-cover rounded-lg border border-midnight-600"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeImage(idx)}
+                                className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                              >
+                                ✕
+                              </button>
+                              {idx === 0 && (
+                                <span className="absolute bottom-1 left-1 bg-gold text-midnight-950 text-xs px-2 py-1 rounded font-semibold">
+                                  Main
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
 
@@ -392,12 +412,13 @@ function AdminBlogs() {
                           <svg className="mx-auto h-8 w-8 text-text-secondary mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                             <path d="M28 8H12a4 4 0 00-4 4v20a4 4 0 004 4h24a4 4 0 004-4V20m-8-12v12m0 0l-4-4m4 4l4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
-                          <p className="text-white font-medium">Upload Image</p>
-                          <p className="text-xs text-text-secondary">or paste URL below</p>
+                          <p className="text-white font-medium">Upload Images</p>
+                          <p className="text-xs text-text-secondary">Multiple files supported</p>
                         </div>
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={handleImageUpload}
                           className="hidden"
                         />
@@ -406,18 +427,17 @@ function AdminBlogs() {
 
                     {/* Image URL as Alternative */}
                     <div className="mt-3">
-                      <p className="text-xs text-text-secondary mb-2">Or paste image URL:</p>
+                      <p className="text-xs text-text-secondary mb-2">Or paste image URL (first image shown as main):</p>
                       <input
                         type="url"
-                        name="imageUrl"
                         value={formData.image}
                         onChange={(e) => {
                           setFormData(prev => ({
                             ...prev,
                             image: e.target.value
                           }));
-                          if (e.target.value) {
-                            setImagePreview(e.target.value);
+                          if (e.target.value && !imagePreviews.includes(e.target.value)) {
+                            setImagePreviews(prev => [e.target.value, ...prev]);
                           }
                         }}
                         className="w-full px-4 py-2 bg-midnight-700 border border-midnight-600 rounded-lg text-white placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-gold text-sm"
@@ -428,12 +448,31 @@ function AdminBlogs() {
 
                   {/* Buttons */}
                   <div className="flex gap-3 pt-4">
-                    <button
-                      type="submit"
-                      className="flex-1 bg-gradient-to-r from-gold to-gold-hover text-midnight-950 py-2 rounded-lg hover:shadow-lg transition font-semibold"
-                    >
-                      {editingBlog ? 'Update Blog' : 'Create Blog'}
-                    </button>
+                    {!editingBlog ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => handleSubmit(e, 'draft')}
+                          className="flex-1 bg-midnight-700 text-text-secondary py-2 rounded-lg hover:bg-midnight-600 transition font-semibold"
+                        >
+                          Save as Draft
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleSubmit(e, 'published')}
+                          className="flex-1 bg-gradient-to-r from-gold to-gold-hover text-midnight-950 py-2 rounded-lg hover:shadow-lg transition font-semibold"
+                        >
+                          Publish Directly
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="submit"
+                        className="flex-1 bg-gradient-to-r from-gold to-gold-hover text-midnight-950 py-2 rounded-lg hover:shadow-lg transition font-semibold"
+                      >
+                        {`Update & ${formData.status === 'draft' ? 'Keep as Draft' : 'Publish'}`}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={handleCloseForm}
@@ -526,7 +565,7 @@ function AdminBlogs() {
                           {getStatusLabel(blog.status)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-text-secondary text-sm">{blog.date}</td>
+                      <td className="px-6 py-4 text-text-secondary text-sm">{new Date(blog.created_at).toLocaleDateString('en-IN')}</td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           <button
