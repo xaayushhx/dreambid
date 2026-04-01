@@ -31,20 +31,40 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'https://dreambid-p.netlify.app',
   'https://dreambid-p.netlify.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:5000',
+  // Allow all Netlify preview deploys (*.netlify.app)
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
     }
+    
+    // Check if origin matches allowed origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow all *.netlify.app domains (for Netlify preview deploys)
+    if (origin.endsWith('.netlify.app')) {
+      return callback(null, true);
+    }
+    
+    // Allow localhost variants
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
 
@@ -55,11 +75,19 @@ app.use(cors(corsOptions));
 // Additional CORS headers middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
+  
+  // Check if origin is allowed
+  const isAllowed = !origin || 
+    allowedOrigins.includes(origin) || 
+    origin.endsWith('.netlify.app') ||
+    origin.includes('localhost') || 
+    origin.includes('127.0.0.1');
+  
+  if (isAllowed) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     res.header('Access-Control-Expose-Headers', 'Content-Range, X-Content-Range');
   }
   
