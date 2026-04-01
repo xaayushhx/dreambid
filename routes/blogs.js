@@ -137,11 +137,12 @@ router.post('/', authenticate, authorize('admin', 'staff'), async (req, res) => 
     // Insert multiple images if provided
     if (images && images.length > 0) {
       for (let i = 0; i < images.length; i++) {
+        const imageData = typeof images[i] === 'string' ? images[i] : images[i].data;
         const imageResult = await pool.query(
           `INSERT INTO blog_images (blog_id, image_data, image_order)
            VALUES ($1, $2, $3)
            RETURNING *`,
-          [blogId, images[i], i]
+          [blogId, imageData, i]
         );
         blogImages.push(imageResult.rows[0]);
       }
@@ -249,11 +250,12 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       
       // Insert new images
       for (let i = 0; i < images.length; i++) {
+        const imageData = typeof images[i] === 'string' ? images[i] : images[i].data;
         const imageResult = await pool.query(
           `INSERT INTO blog_images (blog_id, image_data, image_order)
            VALUES ($1, $2, $3)
            RETURNING *`,
-          [id, images[i], i]
+          [id, imageData, i]
         );
         blogImages.push(imageResult.rows[0]);
       }

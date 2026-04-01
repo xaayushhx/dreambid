@@ -175,10 +175,21 @@ function PropertyDetail() {
     }
     
     setPhoneError('');
-    enquiryMutation.mutate({
+    
+    // Prepare submission data - exclude empty email
+    const submissionData = {
       property_id: parseInt(id),
-      ...enquiryForm,
-    });
+      name: enquiryForm.name,
+      phone: enquiryForm.phone,
+      message: enquiryForm.message,
+    };
+    
+    // Only include email if it's not empty
+    if (enquiryForm.email.trim()) {
+      submissionData.email = enquiryForm.email.trim();
+    }
+    
+    enquiryMutation.mutate(submissionData);
   };
 
   const handleWhatsAppContact = () => {
