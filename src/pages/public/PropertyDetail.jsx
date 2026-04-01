@@ -287,13 +287,16 @@ function PropertyDetail() {
       {/* Image Modal */}
       {showImageModal && ((property.images && property.images.length > 0) || property.cover_image_url) && (() => {
         const allImages = [];
-        if (property.cover_image_url && property.cover_image_url !== 'data:image/stored') {
+        // Add cover image first if valid
+        if (property.cover_image_url && property.cover_image_url.trim() && !property.cover_image_url.includes('data:image/stored')) {
           allImages.push({ url: property.cover_image_url, data: null });
         }
+        // Add property images
         if (property.images && property.images.length > 0) {
           property.images.forEach(img => {
             const imgUrl = typeof img === 'object' ? (img.image_data || img.image_url) : img;
-            if (imgUrl && imgUrl !== property.cover_image_url && imgUrl !== 'data:image/stored') {
+            // Only add if URL exists, is valid, and is not the cover image
+            if (imgUrl && imgUrl.trim() && imgUrl !== property.cover_image_url && !imgUrl.includes('data:image/stored')) {
               allImages.push({ url: imgUrl, data: img.image_data });
             }
           });
@@ -527,14 +530,16 @@ function PropertyDetail() {
             {/* Auto-Scrolling Carousel Section */}
             {((property.images && property.images.length > 0) || property.cover_image_url) && (() => {
               const allImages = [];
-              if (property.cover_image_url && property.cover_image_url !== 'data:image/stored') {
+              // Add cover image first if valid
+              if (property.cover_image_url && property.cover_image_url.trim() && !property.cover_image_url.includes('data:image/stored')) {
                 allImages.push({ url: property.cover_image_url, data: null });
               }
+              // Add property images
               if (property.images && property.images.length > 0) {
                 property.images.forEach(img => {
                   const imgUrl = typeof img === 'object' ? (img.image_data || img.image_url) : img;
-                  // Only add if URL exists and is not the cover image
-                  if (imgUrl && imgUrl !== property.cover_image_url && imgUrl !== 'data:image/stored') {
+                  // Only add if URL exists, is valid, and is not the cover image
+                  if (imgUrl && imgUrl.trim() && imgUrl !== property.cover_image_url && !imgUrl.includes('data:image/stored')) {
                     allImages.push({ url: imgUrl, data: img.image_data });
                   }
                 });
