@@ -118,6 +118,24 @@ function BlogDetail() {
         </div>
       )}
 
+      {/* Multiple Images Gallery */}
+      {blog.images && blog.images.length > 0 && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+          <h3 className="text-xl font-semibold text-white mb-6">Gallery</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {blog.images.map((img, idx) => (
+              <div key={idx} className="rounded-lg overflow-hidden border border-midnight-700">
+                <img
+                  src={img.image_data || img.image_url}
+                  alt={`Blog image ${idx + 1}`}
+                  className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
         <div className="prose prose-invert max-w-none">

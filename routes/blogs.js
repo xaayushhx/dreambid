@@ -165,7 +165,6 @@ router.post('/', authenticate, authorize('admin', 'staff'), async (req, res) => 
 // @access  Admin
 router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) => {
   try {
-
     const { id } = req.params;
     const { title, excerpt, content, category, author, image, images, readTime, status } = req.body;
 
@@ -175,24 +174,71 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       return res.status(404).json({ message: 'Blog not found' });
     }
 
-    // Use first image from images array or fallback to single image
-    const mainImage = (images && images.length > 0) ? images[0] : (image || null);
+    // Build dynamic update query - only update fields that are provided
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
 
-    const result = await pool.query(
-      `UPDATE blogs 
-       SET title = $2,
-           excerpt = $3,
-           content = $4,
-           category = $5,
-           author = $6,
-           image = $7,
-           read_time = $8,
-           status = $9,
-           updated_at = NOW()
-       WHERE id = $1
-       RETURNING *`,
-      [id, title || null, excerpt || null, content || null, category || null, author || null, mainImage || null, readTime || null, status || null]
-    );
+    if (title !== undefined && title !== null) {
+      paramCount++;
+      updates.push(`title = $${paramCount}`);
+      values.push(title);
+    }
+    if (excerpt !== undefined && excerpt !== null) {
+      paramCount++;
+      updates.push(`excerpt = $${paramCount}`);
+      values.push(excerpt);
+    }
+    if (content !== undefined && content !== null) {
+      paramCount++;
+      updates.push(`content = $${paramCount}`);
+      values.push(content);
+    }
+    if (category !== undefined && category !== null) {
+      paramCount++;
+      updates.push(`category = $${paramCount}`);
+      values.push(category);
+    }
+    if (author !== undefined && author !== null) {
+      paramCount++;
+      updates.push(`author = $${paramCount}`);
+      values.push(author);
+    }
+    
+    // Handle image (use first from images array or the image field)
+    const mainImage = (images && images.length > 0) ? images[0] : (image || null);
+    if (mainImage !== null) {
+      paramCount++;
+      updates.push(`image = $${paramCount}`);
+      values.push(mainImage);
+    }
+    
+    if (readTime !== undefined && readTime !== null) {
+      paramCount++;
+      updates.push(`read_time = $${paramCount}`);
+      values.push(readTime);
+    }
+    if (status !== undefined && status !== null) {
+      paramCount++;
+      updates.push(`status = $${paramCount}`);
+      values.push(status);
+    }
+
+    // Always update the updated_at timestamp
+    paramCount++;
+    updates.push(`updated_at = $${paramCount}`);
+    values.push(new Date());
+
+    // Add the id at the end
+    paramCount++;
+    values.push(id);
+
+    const query = `UPDATE blogs 
+       SET ${updates.join(', ')}
+       WHERE id = $${paramCount}
+       RETURNING *`;
+
+    const result = await pool.query(query, values);
 
     let blogImages = [];
 
