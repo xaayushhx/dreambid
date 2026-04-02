@@ -227,8 +227,8 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
 
     // Always update the updated_at timestamp
     paramCount++;
-    updates.push(`updated_at = $${paramCount}`);
-    values.push(new Date());
+    updates.push(`updated_at = $${paramCount}::timestamp`);
+    values.push(new Date().toISOString());
 
     // Add the id at the end
     paramCount++;
