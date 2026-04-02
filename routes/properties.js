@@ -338,19 +338,12 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
         );
       }
 
-      // If a specific image was marked as cover, update the cover_image_url
-      if (coverImageIndex !== null && images[coverImageIndex]) {
-        const coverImageObj = images[coverImageIndex];
-        let coverBase64 = coverImageObj.data;
-        if (coverBase64.startsWith('data:')) {
-          coverBase64 = coverBase64.split(',')[1];
-        }
-        const mimeType = coverImageObj.mimeType || 'image/jpeg';
-        const coverUrl = `data:${mimeType};base64,${coverBase64.substring(0, 450)}`; // Truncate to fit 500 char limit
-        
+      // If a specific image was marked as cover, update the cover_image_url with a marker
+      if (coverImageIndex !== null) {
+        // Store a marker that indicates images exist and should be fetched from property_images table
         await pool.query(
           'UPDATE properties SET cover_image_url = $1 WHERE id = $2',
-          [coverUrl, property.id]
+          ['data:image/stored', property.id]
         );
       }
     }
@@ -515,44 +508,22 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
 
     // Handle cover image based on coverImageId or coverImage
     if (coverImageId !== undefined && coverImageId !== null) {
-      // Get the image data for the selected cover image
-      const coverImgResult = await pool.query(
-        'SELECT image_data, image_mime_type FROM property_images WHERE id = $1 AND property_id = $2',
-        [coverImageId, id]
-      );
-      
-      if (coverImgResult.rows.length > 0) {
-        const coverImg = coverImgResult.rows[0];
-        paramCount++;
-        updates.push(`cover_image_url = $${paramCount}`);
-        // Store as base64 data URL
-        const mimeType = coverImg.image_mime_type || 'image/jpeg';
-        const base64Data = coverImg.image_data.toString('base64');
-        values.push(`data:${mimeType};base64,${base64Data}`);
-      }
+      // Mark that images exist and should be fetched from property_images table
+      paramCount++;
+      updates.push(`cover_image_url = $${paramCount}`);
+      values.push('data:image/stored');
     } else if (coverImage && coverImage.type === 'new' && coverImage.index !== undefined) {
-      // Cover image is from newly added images
+      // Cover image is from newly added images - mark as stored
       if (images && images[coverImage.index]) {
         paramCount++;
         updates.push(`cover_image_url = $${paramCount}`);
-        values.push(images[coverImage.index].data); // Use base64 data directly
+        values.push('data:image/stored');
       }
     } else if (coverImage && coverImage.type === 'existing' && coverImage.id) {
-      // Cover image is existing - same as coverImageId
-      const coverImgResult = await pool.query(
-        'SELECT image_data, image_mime_type FROM property_images WHERE id = $1 AND property_id = $2',
-        [coverImage.id, id]
-      );
-      
-      if (coverImgResult.rows.length > 0) {
-        const coverImg = coverImgResult.rows[0];
-        paramCount++;
-        updates.push(`cover_image_url = $${paramCount}`);
-        // Store as base64 data URL
-        const mimeType = coverImg.image_mime_type || 'image/jpeg';
-        const base64Data = coverImg.image_data.toString('base64');
-        values.push(`data:${mimeType};base64,${base64Data}`);
-      }
+      // Cover image is existing - mark as stored
+      paramCount++;
+      updates.push(`cover_image_url = $${paramCount}`);
+      values.push('data:image/stored');
     }
 
     // Handle cover image

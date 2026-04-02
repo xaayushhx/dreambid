@@ -858,7 +858,7 @@ function PropertyDetail() {
             {/* Expression of Interest Form */}
             <div id="expression-of-interest-form" className="bg-gray-900 rounded-2xl shadow-sm p-6">
               <h3 className="text-xl font-bold text-white mb-6">Expression of Interest</h3>
-              <form onSubmit={handleEnquirySubmit} className="space-y-4">
+              <form onSubmit={handleEnquirySubmit} noValidate className="space-y-4">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Name *</label>
                   <input
