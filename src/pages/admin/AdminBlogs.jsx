@@ -153,28 +153,41 @@ function AdminBlogs() {
 
     try {
       const submitData = {
-        ...formData,
+        title: formData.title,
+        category: formData.category,
+        author: formData.author,
+        excerpt: formData.excerpt,
+        content: formData.content,
+        readTime: formData.readTime || '',
         status: statusOverride || formData.status,
-        images: imagePreviews // Send all images
+        image: formData.image || (imagePreviews.length > 0 ? imagePreviews[0] : ''),
+        images: imagePreviews.filter(img => img && img.trim()) // Send only non-empty images
       };
 
       if (editingBlog) {
         // Update existing blog via API
-        await api.put(`/blogs/${editingBlog}`, submitData);
-        toast.success('Blog updated successfully');
+        const response = await api.put(`/blogs/${editingBlog}`, submitData);
+        if (response.status === 200 || response.status === 201) {
+          toast.success('Blog updated successfully');
+        }
       } else {
         // Create new blog via API
-        await api.post('/blogs', submitData);
-        toast.success('Blog created successfully');
+        const response = await api.post('/blogs', submitData);
+        if (response.status === 201) {
+          toast.success('Blog created successfully');
+        }
       }
 
       // Invalidate and refetch blogs
-      queryClient.invalidateQueries('blogs');
+      await queryClient.invalidateQueries('blogs');
       handleCloseForm();
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to save blog';
-      toast.error(errorMessage);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save blog';
       console.error('Error saving blog:', error);
+      // Show error toast
+      toast.error(errorMessage);
+      // Note: Still invalidate queries since data may have been saved despite the error
+      await queryClient.invalidateQueries('blogs');
     }
   };
 
