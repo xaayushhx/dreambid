@@ -1,9 +1,18 @@
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Load environment variables
-// Netlify Functions will have NODE_PATH set, so just call config() without path
-dotenv.config();
+// Get current directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables - check for .env.local first (development), then .env (production)
+const envPath = process.env.NODE_ENV === 'development' 
+  ? path.join(__dirname, '..', '.env.local')
+  : path.join(__dirname, '..', '.env');
+
+dotenv.config({ path: envPath });
 
 // Build connection config
 let dbConfig;
