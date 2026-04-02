@@ -102,9 +102,19 @@ router.get('/', authenticate, authorize('admin', 'staff'), [
       params.push(property_id);
     }
 
-    // Get total count
-    const countQuery = query.replace('SELECT e.*, p.title as property_title, p.address as property_address', 'SELECT COUNT(*)');
-    const countResult = await pool.query(countQuery, params);
+    // Get total count - use proper count query
+    const countQuery = `
+      SELECT COUNT(*) FROM enquiries e
+      LEFT JOIN properties p ON e.property_id = p.id
+      WHERE 1=1
+      ${status ? `AND e.status = $1` : ''}
+      ${property_id ? `AND e.property_id = $${status ? 2 : 1}` : ''}
+    `;
+    const countParams = [];
+    if (status) countParams.push(status);
+    if (property_id) countParams.push(property_id);
+    
+    const countResult = await pool.query(countQuery, countParams);
     const total = parseInt(countResult.rows[0].count);
 
     // Add pagination
