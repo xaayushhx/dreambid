@@ -1,37 +1,9 @@
 import multer from 'multer';
-import cloudinary from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import path from 'path';
 
-// Configure Cloudinary
-cloudinary.v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-// Fallback to local storage if Cloudinary is not configured
-let storage;
-let isCloudinaryEnabled = false;
-
-if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-  isCloudinaryEnabled = true;
-  
-  // Use Cloudinary Storage
-  storage = new CloudinaryStorage({
-    cloudinary: cloudinary.v2,
-    params: {
-      folder: 'dreambid',
-      resource_type: 'auto',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf']
-    }
-  });
-} else {
-  // Fallback to memory storage when Cloudinary is not configured
-  storage = multer.memoryStorage();
-  console.warn('⚠️  Cloudinary not configured. Images will be stored in memory (temporary).');
-  console.warn('Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to enable persistent image storage.');
-}
+// Use memory storage for file uploads
+const storage = multer.memoryStorage();
+console.log('✓ Using memory storage for file uploads');
 
 // File filter
 const fileFilter = (req, file, cb) => {
@@ -79,23 +51,13 @@ const uploadPdf = upload.single('pdf');
 // Helper function to get image URL from multer file
 export const getFileUrl = (file) => {
   if (!file) return null;
-  
-  // If Cloudinary is enabled, the secure_url is set by CloudinaryStorage
-  if (isCloudinaryEnabled && file.secure_url) {
-    return file.secure_url;
-  }
-  
-  // Fallback for memory storage - return null, indicating image is not persisted
-  console.warn('Image stored in memory - not persisted. Configure Cloudinary for persistent storage.');
-  return null;
+  return null; // Images stored in memory are not persisted
 };
 
 export {
   upload,
   uploadImages,
   uploadImage,
-  uploadPdf,
-  cloudinary,
-  isCloudinaryEnabled
+  uploadPdf
 };
 
