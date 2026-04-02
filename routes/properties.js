@@ -294,14 +294,20 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
       }
     }
 
+    // Determine status based on auction_date
+    const now = new Date();
+    const auctionDate = new Date(auction_date);
+    const propertyStatus = auctionDate <= now ? 'active' : 'upcoming';
+
     // Create property
     const propertyResult = await pool.query(
       `INSERT INTO properties (
         title, description, property_type, address, city, state, zip_code, country,
         latitude, longitude, area_sqft, bedrooms, bathrooms, floors,
         reserve_price, auction_date, auction_time, cover_image_url, created_by,
-        estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+        estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date,
+        is_active, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
       RETURNING *`,
       [
         title, description || null, property_type || null, address, city,
@@ -316,7 +322,9 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
         total_area ? parseFloat(total_area) : null,
         emd ? parseFloat(emd) : null,
         possession_type || null,
-        application_end_date ? new Date(application_end_date) : null
+        application_end_date ? new Date(application_end_date) : null,
+        true, // is_active = true
+        propertyStatus // status = 'active' or 'upcoming'
       ]
     );
 
