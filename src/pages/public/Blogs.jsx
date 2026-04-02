@@ -90,12 +90,20 @@ function Blogs() {
                 className="bg-gradient-to-br from-midnight-800 to-midnight-750 rounded-lg overflow-hidden border border-midnight-700 hover:border-gold hover:shadow-lg hover:shadow-gold/10 transition-all duration-300 group"
               >
                 {/* Image */}
-                <div className="h-48 overflow-hidden bg-midnight-700">
-                  <img
-                    src={blog.image}
-                    alt={blog.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
+                <div className="h-48 overflow-hidden bg-midnight-700 flex items-center justify-center">
+                  {blog.image ? (
+                    <img
+                      src={blog.image}
+                      alt={blog.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center">
+                      <svg className="w-16 h-16 text-gold/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.523 0 10-4.649 10-10.747S17.523 6.253 12 6.253z" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
