@@ -230,6 +230,11 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
     updates.push(`updated_at = $${paramCount}`);
     values.push(new Date());
 
+    // If no updates, return error
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+
     // Add the id at the end
     paramCount++;
     values.push(id);
