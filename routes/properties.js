@@ -215,12 +215,15 @@ router.get('/', [
     }
 
     res.json({
-      properties: result.rows,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
+      message: 'Properties fetched successfully',
+      data: {
+        properties: result.rows,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
       }
     });
   } catch (error) {
@@ -348,7 +351,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
       }
     }
 
-    res.status(201).json({ message: 'Property created successfully', property });
+    res.status(201).json({ message: 'Property created successfully', data: { property } });
   } catch (error) {
     console.error('Create property error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -585,7 +588,7 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       }
     }
 
-    res.json({ message: 'Property updated successfully', property: result.rows[0] });
+    res.json({ message: 'Property updated successfully', data: { property: result.rows[0] } });
   } catch (error) {
     console.error('Update property error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -676,7 +679,7 @@ router.get('/:id', async (req, res) => {
     // Increment view count
     await pool.query('UPDATE properties SET views_count = views_count + 1 WHERE id = $1', [id]);
 
-    res.json({ property });
+    res.json({ message: 'Property fetched successfully', data: { property } });
   } catch (error) {
     console.error('Get property error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
