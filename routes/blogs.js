@@ -178,7 +178,7 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
     // Build dynamic update query - only update fields that are provided
     const updates = [];
     const values = [];
-    let paramCount = 1;
+    let paramCount = 0;
 
     if (title !== undefined && title !== null) {
       paramCount++;
