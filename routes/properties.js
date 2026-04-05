@@ -309,7 +309,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
         reserve_price, auction_date, auction_time, cover_image_url, created_by,
         estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date,
         map_embed_code, is_active, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
       RETURNING *`,
       [
         title, description || null, property_type || null, address, city,
