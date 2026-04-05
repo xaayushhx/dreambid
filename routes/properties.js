@@ -263,8 +263,6 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
       state,
       zip_code,
       country,
-      latitude,
-      longitude,
       area_sqft,
       bedrooms,
       bathrooms,
@@ -307,16 +305,15 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
     const propertyResult = await pool.query(
       `INSERT INTO properties (
         title, description, property_type, address, city, state, zip_code, country,
-        latitude, longitude, area_sqft, bedrooms, bathrooms, floors,
+        area_sqft, bedrooms, bathrooms, floors,
         reserve_price, auction_date, auction_time, cover_image_url, created_by,
         estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date,
         map_embed_code, is_active, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
       RETURNING *`,
       [
         title, description || null, property_type || null, address, city,
         state || null, zip_code || null, country || 'India',
-        latitude ? parseFloat(latitude) : null, longitude ? parseFloat(longitude) : null,
         area_sqft ? parseFloat(area_sqft) : null,
         bedrooms ? parseInt(bedrooms) : null, bathrooms ? parseInt(bathrooms) : null,
         floors ? parseInt(floors) : null,
