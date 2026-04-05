@@ -196,7 +196,7 @@ router.get('/', [
     // Get images for each property
     for (let property of result.rows) {
       const imagesResult = await pool.query(
-        'SELECT id, image_url, image_data, image_mime_type, image_order FROM property_images WHERE property_id = $1 ORDER BY image_order',
+        'SELECT id, image_url, image_data, image_mime_type, image_order, is_cover FROM property_images WHERE property_id = $1 ORDER BY CASE WHEN is_cover = true THEN 0 ELSE 1 END, image_order',
         [property.id]
       );
       // Convert image data to base64 if available
@@ -204,13 +204,16 @@ router.get('/', [
         id: img.id,
         image_url: img.image_url,
         image_data: img.image_data ? 'data:' + (img.image_mime_type || 'image/jpeg') + ';base64,' + img.image_data.toString('base64') : null,
-        image_order: img.image_order
+        image_order: img.image_order,
+        is_cover: img.is_cover
       }));
 
-      // Set cover image to first uploaded image if no URL or placeholder
-      const firstImage = property.images.find(img => img.image_data || img.image_url);
-      if (firstImage && (!property.cover_image_url || property.cover_image_url === 'data:image/stored')) {
-        property.cover_image_url = firstImage.image_data || firstImage.image_url;
+      // Set cover image to the marked cover image or first uploaded image if no URL or placeholder
+      if (!property.cover_image_url || property.cover_image_url === 'data:image/stored') {
+        const coverImage = property.images.find(img => img.is_cover) || property.images.find(img => img.image_data || img.image_url);
+        if (coverImage) {
+          property.cover_image_url = coverImage.image_data || coverImage.image_url;
+        }
       }
     }
 
@@ -275,6 +278,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
       emd,
       possession_type,
       application_end_date,
+      map_embed_code,
       images,
       coverImage
     } = req.body;
@@ -306,8 +310,8 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
         latitude, longitude, area_sqft, bedrooms, bathrooms, floors,
         reserve_price, auction_date, auction_time, cover_image_url, created_by,
         estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date,
-        is_active, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+        map_embed_code, is_active, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
       RETURNING *`,
       [
         title, description || null, property_type || null, address, city,
@@ -323,6 +327,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
         emd ? parseFloat(emd) : null,
         possession_type || null,
         application_end_date ? new Date(application_end_date) : null,
+        map_embed_code || null,
         true, // is_active = true
         propertyStatus // status = 'active' or 'upcoming'
       ]
@@ -418,7 +423,7 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       latitude, longitude, area_sqft, bedrooms, bathrooms, floors,
       reserve_price, auction_date, auction_time, status, is_featured, is_active,
       estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date,
-      images, coverImageId, removeImageIds, coverImage
+      map_embed_code, images, coverImageId, removeImageIds, coverImage
     } = req.body;
 
     // Build update query dynamically
@@ -455,6 +460,16 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       paramCount++;
       updates.push(`state = $${paramCount}`);
       values.push(state);
+    }
+    if (latitude !== undefined) {
+      paramCount++;
+      updates.push(`latitude = $${paramCount}`);
+      values.push(latitude && latitude !== '' ? parseFloat(latitude) : null);
+    }
+    if (longitude !== undefined) {
+      paramCount++;
+      updates.push(`longitude = $${paramCount}`);
+      values.push(longitude && longitude !== '' ? parseFloat(longitude) : null);
     }
     if (reserve_price !== undefined) {
       paramCount++;
@@ -516,6 +531,11 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       updates.push(`application_end_date = $${paramCount}`);
       values.push(application_end_date ? new Date(application_end_date) : null);
     }
+    if (map_embed_code !== undefined) {
+      paramCount++;
+      updates.push(`map_embed_code = $${paramCount}`);
+      values.push(map_embed_code || null);
+    }
 
     // Handle cover image based on coverImageId or coverImage
     if (coverImageId !== undefined && coverImageId !== null) {
@@ -523,6 +543,16 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
       paramCount++;
       updates.push(`cover_image_url = $${paramCount}`);
       values.push('data:image/stored');
+      
+      // Update is_cover flag in property_images
+      await pool.query(
+        'UPDATE property_images SET is_cover = false WHERE property_id = $1',
+        [id]
+      );
+      await pool.query(
+        'UPDATE property_images SET is_cover = true WHERE id = $1 AND property_id = $2',
+        [coverImageId, id]
+      );
     } else if (coverImage && coverImage.type === 'new' && coverImage.index !== undefined) {
       // Cover image is from newly added images - mark as stored
       if (images && images[coverImage.index]) {
@@ -531,10 +561,19 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
         values.push('data:image/stored');
       }
     } else if (coverImage && coverImage.type === 'existing' && coverImage.id) {
-      // Cover image is existing - mark as stored
+      // Cover image is existing - mark as stored and update is_cover flag
       paramCount++;
       updates.push(`cover_image_url = $${paramCount}`);
       values.push('data:image/stored');
+      
+      await pool.query(
+        'UPDATE property_images SET is_cover = false WHERE property_id = $1',
+        [id]
+      );
+      await pool.query(
+        'UPDATE property_images SET is_cover = true WHERE id = $1 AND property_id = $2',
+        [coverImage.id, id]
+      );
     }
 
     // Handle cover image
@@ -588,9 +627,12 @@ router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) =
             [id]
           );
           
+          // Check if this image should be the cover
+          const isCover = coverImage && coverImage.type === 'new' && coverImage.index === i;
+          
           await pool.query(
-            'INSERT INTO property_images (property_id, image_url, image_data, image_mime_type, image_order) VALUES ($1, $2, $3, $4, $5)',
-            [id, `property_${id}_image_${i}`, buffer, mimeType, maxOrder.rows[0].next_order]
+            'INSERT INTO property_images (property_id, image_url, image_data, image_mime_type, image_order, is_cover) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, `property_${id}_image_${i}`, buffer, mimeType, maxOrder.rows[0].next_order, isCover]
           );
         }
       }
@@ -668,20 +710,23 @@ router.get('/:id', async (req, res) => {
 
     // Get images
     const imagesResult = await pool.query(
-      'SELECT id, image_url, image_data, image_mime_type, image_order FROM property_images WHERE property_id = $1 ORDER BY image_order',
+      'SELECT id, image_url, image_data, image_mime_type, image_order, is_cover FROM property_images WHERE property_id = $1 ORDER BY CASE WHEN is_cover = true THEN 0 ELSE 1 END, image_order',
       [id]
     );
     property.images = imagesResult.rows.map(img => ({
       id: img.id,
       image_url: img.image_url,
       image_data: img.image_data ? 'data:' + (img.image_mime_type || 'image/jpeg') + ';base64,' + img.image_data.toString('base64') : null,
-      image_order: img.image_order
+      image_order: img.image_order,
+      is_cover: img.is_cover
     }));
 
-    // Set cover image when image data exists and cover is placeholder
-    const firstImage = property.images.find(img => img.image_data || img.image_url);
-    if (firstImage && (!property.cover_image_url || property.cover_image_url === 'data:image/stored')) {
-      property.cover_image_url = firstImage.image_data || firstImage.image_url;
+    // Set cover image to the marked cover image or first image
+    if (property.cover_image_url === 'data:image/stored' || !property.cover_image_url) {
+      const coverImage = property.images.find(img => img.is_cover) || property.images[0];
+      if (coverImage) {
+        property.cover_image_url = coverImage.image_data || coverImage.image_url;
+      }
     }
 
     // Increment view count

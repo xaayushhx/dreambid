@@ -5,7 +5,7 @@ import api from '../services/api';
 const initialState = {
   user: null,
   token: localStorage.getItem('token') || null,
-  loading: true,
+  loading: !!localStorage.getItem('token'), // Only load if there's an existing token
   isAuthenticated: false,
   error: null,
 };

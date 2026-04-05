@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading, isAdmin } = useAuth();
+  const { isAuthenticated, loading, isAdmin, user } = useAuth();
 
   if (loading) {
     return (
@@ -15,11 +15,12 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
   if (!isAdmin()) {
+    console.warn('User does not have admin privileges', user);
     return <Navigate to="/" replace />;
   }
 

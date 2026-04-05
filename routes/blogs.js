@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import { authenticate, authorize } from '../middleware/auth.js';
 import pool from '../config/database.js';
 
@@ -40,12 +41,25 @@ router.get('/', async (req, res) => {
   try {
     const { status, category } = req.query;
     
+    // Check if user is authenticated
+    let isAuthenticated = false;
+    if (req.header('Authorization')) {
+      try {
+        const token = req.header('Authorization').replace('Bearer ', '');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        isAuthenticated = true;
+        req.user = decoded;
+      } catch (e) {
+        // Not authenticated or invalid token, continue as public
+      }
+    }
+    
     let query = 'SELECT * FROM blogs WHERE 1=1';
     const params = [];
     let paramCount = 1;
 
-    // Only show published blogs for public
-    if (!req.user) {
+    // Only show published blogs for public users
+    if (!isAuthenticated) {
       query += ' AND status = $1';
       params.push('published');
       paramCount = 2;
@@ -67,9 +81,23 @@ router.get('/', async (req, res) => {
 
     const result = await pool.query(query, params);
     
+    // Fetch images for each blog
+    const blogs = await Promise.all(
+      result.rows.map(async (blog) => {
+        const imagesResult = await pool.query(
+          'SELECT * FROM blog_images WHERE blog_id = $1 ORDER BY image_order ASC',
+          [blog.id]
+        );
+        return {
+          ...blog,
+          images: imagesResult.rows
+        };
+      })
+    );
+    
     res.json({
       message: 'Blogs fetched successfully',
-      data: result.rows
+      data: blogs
     });
   } catch (error) {
     console.error('Error fetching blogs:', error);

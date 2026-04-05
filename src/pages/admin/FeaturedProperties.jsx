@@ -12,7 +12,7 @@ function FeaturedProperties() {
     'all-properties',
     async () => {
       const response = await api.get('/properties?limit=1000');
-      return response.data?.properties || [];
+      return response.data?.data?.properties || [];
     }
   );
 
@@ -21,7 +21,7 @@ function FeaturedProperties() {
     'featured-properties',
     async () => {
       const response = await api.get('/properties?is_featured=true');
-      return response.data?.properties || [];
+      return response.data?.data?.properties || [];
     }
   );
 

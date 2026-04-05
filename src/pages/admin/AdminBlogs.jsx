@@ -16,6 +16,7 @@ function AdminBlogs() {
   const [categories, setCategories] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [configLoading, setConfigLoading] = useState(true);
+  const [selectedStatus, setSelectedStatus] = useState(null); // Filter by status
 
   // Fetch blog configuration (categories and statuses)
   const { data: configData, isLoading: configIsLoading } = useQuery(
@@ -55,9 +56,13 @@ function AdminBlogs() {
 
   // Fetch all blogs from API
   const { data: blogsData, isLoading, error } = useQuery(
-    'blogs',
+    ['blogs', selectedStatus],
     async () => {
-      const response = await api.get('/blogs');
+      const params = new URLSearchParams();
+      if (selectedStatus) {
+        params.append('status', selectedStatus);
+      }
+      const response = await api.get(`/blogs?${params.toString()}`);
       return response.data.data || [];
     },
     {
@@ -74,7 +79,20 @@ function AdminBlogs() {
   const handleOpenForm = (blog = null) => {
     if (blog) {
       setFormData(blog);
-      setImagePreviews(blog.image ? [blog.image] : []);
+      // Load all images - from blog.images array and the main image
+      const allImages = [];
+      if (blog.image) {
+        allImages.push(blog.image);
+      }
+      if (blog.images && Array.isArray(blog.images)) {
+        blog.images.forEach(img => {
+          const imageUrl = img.image_url || img.image_data;
+          if (imageUrl && !allImages.includes(imageUrl)) {
+            allImages.push(imageUrl);
+          }
+        });
+      }
+      setImagePreviews(allImages.length > 0 ? allImages : (blog.image ? [blog.image] : []));
       setImages([]);
       setEditingBlog(blog.id);
     } else {
@@ -250,6 +268,35 @@ function AdminBlogs() {
           >
             + Add New Blog
           </button>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-text-secondary mb-2">Filter by Status</label>
+            <select
+              value={selectedStatus || ''}
+              onChange={(e) => setSelectedStatus(e.target.value || null)}
+              className="w-full px-4 py-2 bg-midnight-700 border border-midnight-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold"
+            >
+              <option value="">All Blogs</option>
+              {statuses.map(status => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {selectedStatus && (
+            <div className="flex items-end">
+              <button
+                onClick={() => setSelectedStatus(null)}
+                className="px-4 py-2 bg-midnight-700 border border-midnight-600 text-text-secondary rounded-lg hover:bg-midnight-600 transition font-medium"
+              >
+                Clear Filter
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Form Modal */}

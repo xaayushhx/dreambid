@@ -89,6 +89,7 @@ CREATE TABLE properties (
   -- Media
   cover_image_url VARCHAR(500),
   pdf_url VARCHAR(500),
+  map_embed_code TEXT,
   
   -- Statistics
   views_count INTEGER DEFAULT 0,
@@ -111,6 +112,7 @@ CREATE TABLE property_images (
   image_data BYTEA,
   image_mime_type VARCHAR(50) DEFAULT 'image/jpeg',
   image_order INTEGER DEFAULT 0,
+  is_cover BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -122,7 +124,7 @@ CREATE TABLE enquiries (
   property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL,
+  email VARCHAR(255),
   phone VARCHAR(20) NOT NULL,
   message TEXT,
   enquiry_type VARCHAR(50) DEFAULT 'general' CHECK (enquiry_type IN ('general', 'bid', 'inspection', 'complaint')),

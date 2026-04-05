@@ -47,7 +47,7 @@
     "dev:server": "NODE_ENV=development nodemon server.js",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node server.js",
+    "start": "NODE_ENV=development node server.js",
     "seed": "node scripts/seed-database.js",
     "lint": "eslint . --ext js,jsx"
   },

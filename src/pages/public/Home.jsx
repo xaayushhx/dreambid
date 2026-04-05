@@ -138,13 +138,22 @@ function Home() {
     }
   );
 
+  // Debug logging
+  useEffect(() => {
+    console.log('=== HOME PAGE DEBUG ===');
+    console.log('Featured Data:', featuredData);
+    console.log('Fallback Data:', fallbackData);
+    console.log('Featured Properties Count:', featuredProperties.length);
+  }, [featuredData, fallbackData]);
+
   // Featured properties - only from the featured query, no fallback
-  const featuredProperties = featuredData?.data?.properties || [];
+  const featuredProperties = featuredData?.data?.data?.properties || [];
   
   // General properties for "More Properties" section - always use fallback (non-featured properties)
   // Deduplicate by ID to prevent any duplicate rendering
   const properties = useMemo(() => {
-    const fallbackProps = fallbackData?.data?.properties || [];
+    const fallbackProps = fallbackData?.data?.data?.properties || [];
+    console.log('Fallback Props from useMemo:', fallbackProps);
     const seen = new Set();
     return fallbackProps.filter(prop => {
       if (seen.has(prop.id)) return false;

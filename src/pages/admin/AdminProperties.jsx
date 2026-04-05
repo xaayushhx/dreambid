@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { propertiesAPI } from '../../services/api';
@@ -11,10 +11,43 @@ function Properties() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useQuery(
+  // Refetch data when component mounts or when coming back from property form
+  const { data, isLoading, error, refetch } = useQuery(
     ['properties', statusFilter],
-    () => propertiesAPI.getAll({ status: statusFilter || undefined, limit: 100 })
+    () => propertiesAPI.getAll({ status: statusFilter || '', limit: 100 }),
+    {
+      staleTime: 0, // Data is immediately stale
+      cacheTime: 5000, // Keep in cache for 5 seconds
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+    }
   );
+
+  // Refetch when component mounts
+  useEffect(() => {
+    refetch();
+  }, []);
+
+  // Refetch when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetch();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refetch]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('=== ADMIN PROPERTIES PAGE DEBUG ===');
+    console.log('Data:', data);
+    console.log('Is Loading:', isLoading);
+    console.log('Error:', error);
+    console.log('Status Filter:', statusFilter);
+  }, [data, isLoading, error, statusFilter]);
 
   const deleteMutation = useMutation(
     (id) => propertiesAPI.delete(id),
@@ -31,7 +64,8 @@ function Properties() {
     }
   );
 
-  const properties = data?.data?.properties || [];
+  const properties = data?.data?.data?.properties || [];
+  console.log('Properties Array:', properties.length, properties);
 
   const handleDelete = (id, title) => {
     if (window.confirm(`Are you sure you want to delete "${title}"?`)) {

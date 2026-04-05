@@ -27,8 +27,6 @@ function PropertyForm() {
     state: '',
     zip_code: '',
     country: 'India',
-    latitude: '',
-    longitude: '',
     area_sqft: '',
     floors: '',
     reserve_price: '',
@@ -41,6 +39,7 @@ function PropertyForm() {
     emd: '',
     possession_type: '',
     application_end_date: '',
+    map_embed_code: '',
   });
 
   const [images, setImages] = useState([]);
@@ -49,8 +48,8 @@ function PropertyForm() {
   const [imagesToRemove, setImagesToRemove] = useState([]);
 
   useEffect(() => {
-    if (propertyData?.data?.property) {
-      const prop = propertyData.data.property;
+    if (propertyData?.data?.data?.property) {
+      const prop = propertyData.data.data.property;
       setFormData({
         title: prop.title || '',
         description: prop.description || '',
@@ -60,8 +59,6 @@ function PropertyForm() {
         state: prop.state || '',
         zip_code: prop.zip_code || '',
         country: prop.country || 'India',
-        latitude: prop.latitude || '',
-        longitude: prop.longitude || '',
         area_sqft: prop.area_sqft || '',
         floors: prop.floors || '',
         reserve_price: prop.reserve_price || '',
@@ -74,6 +71,7 @@ function PropertyForm() {
         emd: prop.emd || '',
         possession_type: prop.possession_type || '',
         application_end_date: prop.application_end_date ? prop.application_end_date.split('T')[0] : '',
+        map_embed_code: prop.map_embed_code || '',
       });
       setExistingImages(prop.images || []);
       // Set first image as default cover image
@@ -86,12 +84,17 @@ function PropertyForm() {
   const createMutation = useMutation(
     (formDataToSend) => propertiesAPI.create(formDataToSend),
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast.success('Property created successfully!');
-        // Invalidate all property-related queries
-        queryClient.invalidateQueries('properties');
-        queryClient.invalidateQueries(['properties']);
-        navigate('/admin/properties');
+        // Invalidate all property-related queries with refetch
+        await queryClient.invalidateQueries({ 
+          queryKey: ['properties'],
+          refetchType: 'all'
+        });
+        // Navigate after a short delay to ensure data is fetched
+        setTimeout(() => {
+          navigate('/admin/properties');
+        }, 300);
       },
       onError: (error) => {
         toast.error(error.response?.data?.message || 'Failed to create property');
@@ -102,13 +105,21 @@ function PropertyForm() {
   const updateMutation = useMutation(
     (formDataToSend) => propertiesAPI.update(id, formDataToSend),
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast.success('Property updated successfully!');
-        // Invalidate all property-related queries
-        queryClient.invalidateQueries('properties');
-        queryClient.invalidateQueries(['properties']);
-        queryClient.invalidateQueries(['property', id]);
-        navigate('/admin/properties');
+        // Invalidate all property-related queries with refetch
+        await queryClient.invalidateQueries({ 
+          queryKey: ['properties'],
+          refetchType: 'all'
+        });
+        await queryClient.invalidateQueries({ 
+          queryKey: ['property', id],
+          refetchType: 'all'
+        });
+        // Navigate after a short delay to ensure data is fetched
+        setTimeout(() => {
+          navigate('/admin/properties');
+        }, 300);
       },
       onError: (error) => {
         toast.error(error.response?.data?.message || 'Failed to update property');
@@ -123,6 +134,8 @@ function PropertyForm() {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
+
+  // Map embed code is now stored directly without coordinate extraction
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -367,31 +380,18 @@ function PropertyForm() {
                 <p className="text-xs text-red-500 mt-1">Zip code must be 6 digits</p>
               )}
             </div>
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-text-primary mb-1">
-                Latitude
+                📍 Google Maps Embed Code (Optional)
               </label>
-              <input
-                type="number"
-                step="any"
-                name="latitude"
-                value={formData.latitude}
+              <textarea
+                name="map_embed_code"
+                value={formData.map_embed_code}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                placeholder="Paste the complete iframe embed code from Google Maps"
+                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold text-sm font-mono text-xs h-24"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                Longitude
-              </label>
-              <input
-                type="number"
-                step="any"
-                name="longitude"
-                value={formData.longitude}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-              />
+              <p className="text-xs text-text-muted mt-1">Get the code from Google Maps: Click 'Share' → 'Embed a map' → Copy the iframe code</p>
             </div>
           </div>
         </div>

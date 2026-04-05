@@ -1,37 +1,49 @@
 import { useQuery, useQueryClient } from 'react-query';
 import { propertiesAPI, enquiriesAPI } from '../../services/api';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function Dashboard() {
   const queryClient = useQueryClient();
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
   // Fetch all properties including expired for dashboard stats
-  const { data: propertiesData, isLoading: propertiesLoading, refetch: refetchProperties } = useQuery(
-    'dashboard-properties',
+  const { data: propertiesData, isLoading: propertiesLoading, refetch: refetchProperties, error: propsError } = useQuery(
+    ['properties', ''], // Use same query key pattern as AdminProperties
     () => propertiesAPI.getAll({ limit: 1000, status: '' }), // Empty string = all properties including expired
     {
+      staleTime: 0,
+      cacheTime: 5000,
       refetchInterval: 30000, // Refetch every 30 seconds
       refetchOnWindowFocus: true,
     }
   );
 
   const { data: enquiriesData, isLoading: enquiriesLoading, refetch: refetchEnquiries } = useQuery(
-    'enquiries',
+    ['enquiries'],
     () => enquiriesAPI.getAll({ limit: 1000 }),
     {
+      staleTime: 0,
+      cacheTime: 5000,
       refetchInterval: 30000, // Refetch every 30 seconds
       refetchOnWindowFocus: true,
     }
   );
+
+  // Debug: Log when data changes
+  useEffect(() => {
+    if (propertiesData) {
+      console.log('Dashboard propertiesData:', propertiesData);
+      console.log('Properties array:', propertiesData?.data?.data?.properties);
+    }
+  }, [propertiesData]);
 
   const handleRefresh = async () => {
     await Promise.all([refetchProperties(), refetchEnquiries()]);
     setLastRefresh(new Date());
   };
 
-  const properties = propertiesData?.data?.properties || [];
+  const properties = propertiesData?.data?.data?.properties || [];
   const enquiries = enquiriesData?.data?.enquiries || [];
 
   const stats = {

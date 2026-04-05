@@ -80,8 +80,17 @@ function Properties() {
     }
   );
 
-  const properties = data?.data?.properties || [];
-  const pagination = data?.data?.pagination || {};
+  // Debug logging
+  useEffect(() => {
+    console.log('=== PROPERTIES PAGE DEBUG ===');
+    console.log('Query Data:', data);
+    console.log('Is Loading:', isLoading);
+    console.log('Error:', error);
+    console.log('Properties Count:', properties.length);
+  }, [data, isLoading, error]);
+
+  const properties = data?.data?.data?.properties || [];
+  const pagination = data?.data?.data?.pagination || {};
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));

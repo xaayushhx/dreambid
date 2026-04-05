@@ -16,16 +16,18 @@ function Enquiries() {
   const updateStatusMutation = useMutation(
     ({ id, status }) => enquiriesAPI.updateStatus(id, status),
     {
-      onSuccess: () => {
+      onSuccess: (response, { id, status }) => {
         toast.success('Enquiry status updated');
-        queryClient.invalidateQueries('enquiries');
-        queryClient.invalidateQueries(['enquiries']);
-        if (selectedEnquiry) {
+        // Update the selected enquiry with the new status
+        if (selectedEnquiry && selectedEnquiry.id === id) {
           setSelectedEnquiry({
             ...selectedEnquiry,
-            status: selectedEnquiry.status
+            status: status
           });
         }
+        // Invalidate queries to refresh the list
+        queryClient.invalidateQueries('enquiries');
+        queryClient.invalidateQueries(['enquiries', statusFilter]);
       },
       onError: (error) => {
         toast.error(error.response?.data?.message || 'Failed to update status');

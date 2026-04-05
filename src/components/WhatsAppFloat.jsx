@@ -18,11 +18,11 @@ export default function WhatsAppFloat() {
 
   return (
     <div 
-      className="fixed z-50 right-6 bottom-48 md:bottom-56 pointer-events-none"
+      className="fixed z-50 right-6 bottom-36 lg:bottom-56 pointer-events-none"
     >      
       {/* Tooltip */}
       {isOpen && (
-        <div className="absolute bottom-20 right-0 bg-gray-800 text-white rounded-lg px-4 py-2 mb-2 whitespace-nowrap text-sm shadow-lg animate-fadeIn z-50">
+        <div className="absolute bottom-16 right-0 bg-gray-800 text-white rounded-lg px-4 py-2 mb-2 whitespace-nowrap text-sm shadow-lg animate-fadeIn z-50">
           Chat with us
         </div>
       )}
@@ -33,13 +33,13 @@ export default function WhatsAppFloat() {
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
         onTouchStart={() => setIsOpen(!isOpen)}
-        className="relative group bg-green-500 hover:bg-green-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 flex-shrink-0 pointer-events-auto"
+        className="relative group bg-green-500 hover:bg-green-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 flex-shrink-0 pointer-events-auto"
         aria-label="Chat on WhatsApp"
       >
         <img 
           src="/whatsapp.svg" 
           alt="WhatsApp" 
-          className="w-7 h-7"
+          className="w-6 h-6"
         />
       </button>
 

@@ -12,7 +12,11 @@ const router = express.Router();
 router.post('/', [
   body('property_id').isInt(),
   body('name').trim().notEmpty(),
-  body('email').optional({ checkFalsy: true }).isEmail().normalizeEmail(),
+  body('email')
+    .if((value) => value && value.trim() !== '')
+    .isEmail()
+    .normalizeEmail()
+    .optional({ checkFalsy: true }),
   body('phone').trim().notEmpty().matches(/^\d{10}$/).withMessage('Phone number must be exactly 10 digits'),
   body('message').optional().trim(),
 ], async (req, res) => {

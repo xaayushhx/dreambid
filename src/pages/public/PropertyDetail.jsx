@@ -138,7 +138,7 @@ function PropertyDetail() {
     }
   );
 
-  const property = data?.data?.property;
+  const property = data?.data?.data?.property;
 
   // Fetch similar properties from the same city
   const { data: similarPropertiesData, isLoading: similarLoading } = useQuery(
@@ -153,14 +153,19 @@ function PropertyDetail() {
   );
 
   const similarProperties = useMemo(() => {
-    if (!similarPropertiesData?.data?.properties) return [];
+    if (!similarPropertiesData?.data?.data?.properties) return [];
     // Filter out the current property from similar properties
-    return similarPropertiesData.data.properties.filter(p => p.id !== parseInt(id)).slice(0, 5);
+    return similarPropertiesData.data.data.properties.filter(p => p.id !== parseInt(id)).slice(0, 5);
   }, [similarPropertiesData, id]);
 
   const center = useMemo(() => {
     if (property?.latitude && property?.longitude) {
-      return { lat: parseFloat(property.latitude), lng: parseFloat(property.longitude) };
+      const lat = parseFloat(property.latitude);
+      const lng = parseFloat(property.longitude);
+      // Validate that coordinates are reasonable (within valid latitude/longitude ranges)
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
     }
     return null;
   }, [property?.latitude, property?.longitude]);
@@ -198,16 +203,36 @@ function PropertyDetail() {
   };
 
   const handleGetDirections = () => {
-    if (center) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${center.lat},${center.lng}`;
-      window.open(url, '_blank');
+    if (center && center.lat && center.lng) {
+      // Ensure coordinates are properly formatted as numbers
+      const lat = typeof center.lat === 'string' ? parseFloat(center.lat) : center.lat;
+      const lng = typeof center.lng === 'string' ? parseFloat(center.lng) : center.lng;
+      
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        window.open(url, '_blank');
+      } else {
+        toast.error('Invalid coordinates for directions');
+      }
+    } else {
+      toast.error('Location coordinates not available');
     }
   };
 
   const handleViewOnGoogleMaps = () => {
-    if (center) {
-      const url = `https://www.google.com/maps/search/?api=1&query=${center.lat},${center.lng}`;
-      window.open(url, '_blank');
+    if (center && center.lat && center.lng) {
+      // Ensure coordinates are properly formatted as numbers
+      const lat = typeof center.lat === 'string' ? parseFloat(center.lat) : center.lat;
+      const lng = typeof center.lng === 'string' ? parseFloat(center.lng) : center.lng;
+      
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        window.open(url, '_blank');
+      } else {
+        toast.error('Invalid coordinates for map view');
+      }
+    } else {
+      toast.error('Location coordinates not available');
     }
   };
 
@@ -283,6 +308,22 @@ function PropertyDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-midnight-900 border border-red-900 rounded-xl shadow-sm p-6">
             <p className="text-red-400">Property not found or error loading property.</p>
+            <Link to="/properties" className="text-red-400 hover:text-red-300 mt-4 inline-block font-medium">
+              ← Back to Properties
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Ensure property is defined before using it
+  if (!property || typeof property !== 'object') {
+    return (
+      <div className="min-h-screen bg-midnight-950 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-midnight-900 border border-red-900 rounded-xl shadow-sm p-6">
+            <p className="text-red-400">Invalid property data.</p>
             <Link to="/properties" className="text-red-400 hover:text-red-300 mt-4 inline-block font-medium">
               ← Back to Properties
             </Link>
@@ -564,14 +605,16 @@ function PropertyDetail() {
                   <div className="relative">
                     {/* Main Carousel Display */}
                     <div className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
-                      <img
-                        src={getImageUrl(allImages[carouselIndex].url, allImages[carouselIndex].data)}
-                        alt={`Property ${carouselIndex + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23333" width="400" height="300"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
-                        }}
-                      />
+                      {allImages[carouselIndex] && (
+                        <img
+                          src={getImageUrl(allImages[carouselIndex].url, allImages[carouselIndex].data)}
+                          alt={`Property ${carouselIndex + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23333" width="400" height="300"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
+                          }}
+                        />
+                      )}
                       
                       {/* Navigation Arrows */}
                       {allImages.length > 1 && (
@@ -651,7 +694,14 @@ function PropertyDetail() {
               );
             })()}
             {/* Map Section */}
-            {center && (
+            {property?.map_embed_code ? (
+              <div className="bg-midnight-900 border border-midnight-700 rounded-2xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-text-primary mb-4">Location</h3>
+                <div className="aspect-video rounded-lg overflow-hidden">
+                  <div dangerouslySetInnerHTML={{ __html: property.map_embed_code }} />
+                </div>
+              </div>
+            ) : center && (
               <div className="bg-midnight-900 border border-midnight-700 rounded-2xl shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-text-primary mb-4">Location</h3>
                 <div>
