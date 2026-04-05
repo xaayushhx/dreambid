@@ -3,16 +3,31 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Get current directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Get current directory (handle both ESM and CommonJS environments)
+let __filename;
+let __dirname;
+
+try {
+  __filename = fileURLToPath(import.meta.url);
+  __dirname = path.dirname(__filename);
+} catch (e) {
+  // In Netlify Functions or other CommonJS environments, use current directory
+  __dirname = process.cwd();
+}
 
 // Load environment variables - check for .env.local first (development), then .env (production)
 const envPath = process.env.NODE_ENV === 'development' 
-  ? path.join(__dirname, '..', '.env.local')
-  : path.join(__dirname, '..', '.env');
+  ? path.join(__dirname, '.env.local')
+  : path.join(__dirname, '.env');
 
-dotenv.config({ path: envPath });
+// Only try to load .env files if not in production or if the file exists
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    dotenv.config({ path: envPath });
+  } catch (e) {
+    // Silently fail if .env file doesn't exist in serverless environment
+  }
+}
 
 // Build connection config
 let dbConfig;
