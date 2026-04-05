@@ -15,6 +15,12 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Name and contact number are required' });
     }
 
+    // Validate contact number - must be 10 digits
+    const cleanedNumber = contactNumber.replace(/\s/g, '');
+    if (!/^\d{10}$/.test(cleanedNumber)) {
+      return res.status(400).json({ message: 'Contact number must be exactly 10 digits' });
+    }
+
     // Create table if it doesn't exist
     await pool.query(`
       CREATE TABLE IF NOT EXISTS user_registrations (

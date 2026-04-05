@@ -18,7 +18,7 @@ export default function WhatsAppFloat() {
 
   return (
     <div 
-      className="fixed z-50 right-6 bottom-36 lg:bottom-56 pointer-events-none"
+      className="fixed z-50 right-6 bottom-44 lg:bottom-60 pointer-events-none"
     >      
       {/* Tooltip */}
       {isOpen && (
