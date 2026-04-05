@@ -188,7 +188,7 @@ CREATE TABLE blogs (
 CREATE TABLE blog_images (
   id SERIAL PRIMARY KEY,
   blog_id INTEGER NOT NULL REFERENCES blogs(id) ON DELETE CASCADE,
-  image_url VARCHAR(500) NOT NULL,
+  image_url VARCHAR(500),
   image_data TEXT,
   image_order INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
