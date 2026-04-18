@@ -39,7 +39,9 @@ router.get('/config/meta', async (req, res) => {
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const { status, category } = req.query;
+    const { status, category, limit = 50, offset = 0 } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 50, 100); // Max 100 per request
+    const offsetNum = parseInt(offset) || 0;
     
     // Check if user is authenticated
     let isAuthenticated = false;
@@ -77,31 +79,16 @@ router.get('/', async (req, res) => {
       paramCount++;
     }
 
-    query += ' ORDER BY created_at DESC';
+    query += ' ORDER BY created_at DESC LIMIT $' + paramCount + ' OFFSET $' + (paramCount + 1);
+    params.push(limitNum, offsetNum);
 
     const result = await pool.query(query, params);
     
-    // Fetch images for each blog with error handling
+    // For list view, only return first image (not all images) to reduce payload
     const blogs = result.rows.map(blog => ({
       ...blog,
-      images: []
+      images: [] // Don't include images in list view to reduce payload size
     }));
-    
-    // Only fetch images if there are blogs
-    if (blogs.length > 0) {
-      try {
-        for (const blog of blogs) {
-          const imagesResult = await pool.query(
-            'SELECT * FROM blog_images WHERE blog_id = $1 ORDER BY image_order ASC',
-            [blog.id]
-          );
-          blog.images = imagesResult.rows || [];
-        }
-      } catch (imgErr) {
-        console.error('Error fetching blog images:', imgErr);
-        // Continue without images if there's an error
-      }
-    }
     
     res.json({
       message: 'Blogs fetched successfully',
