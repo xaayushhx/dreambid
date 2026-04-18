@@ -82,22 +82,32 @@ function AdminBlogs() {
       try {
         const response = await api.get(`/blogs/${blog.id}`);
         const fullBlog = response.data.data;
+        console.log('Fetched blog:', fullBlog);
+        console.log('Blog images array:', fullBlog.images);
+        
         setFormData(fullBlog);
         
-        // Load all images - from blog.images array and the main image
+        // Load all images - prioritize images array, then fall back to main image
         const allImages = [];
-        if (fullBlog.image) {
-          allImages.push(fullBlog.image);
-        }
-        if (fullBlog.images && Array.isArray(fullBlog.images)) {
+        
+        // First add all images from the images array
+        if (fullBlog.images && Array.isArray(fullBlog.images) && fullBlog.images.length > 0) {
           fullBlog.images.forEach(img => {
-            const imageUrl = img.image_url || img.image_data;
+            // Try both image_url and image_data
+            const imageUrl = img.image_url || img.image_data || img;
             if (imageUrl && !allImages.includes(imageUrl)) {
               allImages.push(imageUrl);
             }
           });
         }
-        setImagePreviews(allImages.length > 0 ? allImages : (fullBlog.image ? [fullBlog.image] : []));
+        
+        // If no images in images array but there's a main image, use that
+        if (allImages.length === 0 && fullBlog.image) {
+          allImages.push(fullBlog.image);
+        }
+        
+        console.log('Final allImages array:', allImages);
+        setImagePreviews(allImages);
         setImages([]);
         setEditingBlog(fullBlog.id);
       } catch (err) {
@@ -349,15 +359,19 @@ function AdminBlogs() {
                       </label>
                       <select
                         name="category"
-                        value={formData.category}
+                        value={formData.category || ''}
                         onChange={handleInputChange}
                         className="w-full px-4 py-2 bg-midnight-700 border border-midnight-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold"
                       >
-                        {categories.map(cat => (
-                          <option key={cat.value} value={cat.value}>
-                            {cat.label}
-                          </option>
-                        ))}
+                        {categories && categories.length > 0 ? (
+                          categories.map(cat => (
+                            <option key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">Loading categories...</option>
+                        )}
                       </select>
                     </div>
                     <div>
@@ -366,15 +380,19 @@ function AdminBlogs() {
                       </label>
                       <select
                         name="status"
-                        value={formData.status}
+                        value={formData.status || ''}
                         onChange={handleInputChange}
                         className="w-full px-4 py-2 bg-midnight-700 border border-midnight-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-gold"
                       >
-                        {statuses.map(status => (
-                          <option key={status.value} value={status.value}>
-                            {status.label}
-                          </option>
-                        ))}
+                        {statuses && statuses.length > 0 ? (
+                          statuses.map(status => (
+                            <option key={status.value} value={status.value}>
+                              {status.label}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">Loading statuses...</option>
+                        )}
                       </select>
                     </div>
                   </div>
