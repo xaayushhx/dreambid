@@ -81,19 +81,27 @@ router.get('/', async (req, res) => {
 
     const result = await pool.query(query, params);
     
-    // Fetch images for each blog
-    const blogs = await Promise.all(
-      result.rows.map(async (blog) => {
-        const imagesResult = await pool.query(
-          'SELECT * FROM blog_images WHERE blog_id = $1 ORDER BY image_order ASC',
-          [blog.id]
-        );
-        return {
-          ...blog,
-          images: imagesResult.rows
-        };
-      })
-    );
+    // Fetch all images in one query for better performance
+    const allBlogIds = result.rows.map(b => b.id);
+    let blogImages = [];
+    
+    if (allBlogIds.length > 0) {
+      const placeholders = allBlogIds.map((_, i) => `$${i + 1}`).join(',');
+      const imagesResult = await pool.query(
+        `SELECT * FROM blog_images WHERE blog_id IN (${placeholders}) ORDER BY blog_id, image_order ASC`,
+        allBlogIds
+      );
+      blogImages = imagesResult.rows;
+    }
+    
+    // Map images to blogs
+    const blogs = result.rows.map(blog => {
+      const images = blogImages.filter(img => img.blog_id === blog.id);
+      return {
+        ...blog,
+        images
+      };
+    });
     
     res.json({
       message: 'Blogs fetched successfully',
