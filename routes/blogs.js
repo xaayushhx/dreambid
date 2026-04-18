@@ -82,36 +82,26 @@ router.get('/', async (req, res) => {
     const result = await pool.query(query, params);
     
     // Fetch images for each blog with error handling
-    const blogs = await Promise.allSettled(
-      result.rows.map(async (blog) => {
-        try {
+    const blogs = result.rows.map(blog => ({
+      ...blog,
+      images: []
+    }));
+    
+    // Only fetch images if there are blogs
+    if (blogs.length > 0) {
+      try {
+        for (const blog of blogs) {
           const imagesResult = await pool.query(
             'SELECT * FROM blog_images WHERE blog_id = $1 ORDER BY image_order ASC',
             [blog.id]
           );
-          return {
-            ...blog,
-            images: imagesResult.rows || []
-          };
-        } catch (err) {
-          console.error(`Error fetching images for blog ${blog.id}:`, err);
-          return {
-            ...blog,
-            images: []
-          };
+          blog.images = imagesResult.rows || [];
         }
-      })
-    ).then(results => {
-      return results.map(result => {
-        if (result.status === 'fulfilled') {
-          return result.value;
-        } else {
-          console.error('Image fetch failed:', result.reason);
-          // Return blog without images if fetch fails
-          return null;
-        }
-      }).filter(blog => blog !== null);
-    });
+      } catch (imgErr) {
+        console.error('Error fetching blog images:', imgErr);
+        // Continue without images if there's an error
+      }
+    }
     
     res.json({
       message: 'Blogs fetched successfully',
