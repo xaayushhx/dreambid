@@ -76,25 +76,34 @@ function AdminBlogs() {
 
   const blogs = blogsData || [];
 
-  const handleOpenForm = (blog = null) => {
+  const handleOpenForm = async (blog = null) => {
     if (blog) {
-      setFormData(blog);
-      // Load all images - from blog.images array and the main image
-      const allImages = [];
-      if (blog.image) {
-        allImages.push(blog.image);
+      // Fetch full blog with images if editing
+      try {
+        const response = await api.get(`/blogs/${blog.id}`);
+        const fullBlog = response.data.data;
+        setFormData(fullBlog);
+        
+        // Load all images - from blog.images array and the main image
+        const allImages = [];
+        if (fullBlog.image) {
+          allImages.push(fullBlog.image);
+        }
+        if (fullBlog.images && Array.isArray(fullBlog.images)) {
+          fullBlog.images.forEach(img => {
+            const imageUrl = img.image_url || img.image_data;
+            if (imageUrl && !allImages.includes(imageUrl)) {
+              allImages.push(imageUrl);
+            }
+          });
+        }
+        setImagePreviews(allImages.length > 0 ? allImages : (fullBlog.image ? [fullBlog.image] : []));
+        setImages([]);
+        setEditingBlog(fullBlog.id);
+      } catch (err) {
+        console.error('Error fetching blog for editing:', err);
+        toast.error('Failed to load blog for editing');
       }
-      if (blog.images && Array.isArray(blog.images)) {
-        blog.images.forEach(img => {
-          const imageUrl = img.image_url || img.image_data;
-          if (imageUrl && !allImages.includes(imageUrl)) {
-            allImages.push(imageUrl);
-          }
-        });
-      }
-      setImagePreviews(allImages.length > 0 ? allImages : (blog.image ? [blog.image] : []));
-      setImages([]);
-      setEditingBlog(blog.id);
     } else {
       setFormData({
         title: '',
