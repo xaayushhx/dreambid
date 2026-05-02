@@ -886,7 +886,7 @@ function PropertyDetail() {
                               )}
                               {prop.area_sqft && (
                                 <span className="text-text-secondary">
-                                  <span className="font-medium text-text-primary">{Math.round(prop.area_sqft)}</span> sq.ft.
+                                  <span className="font-medium text-text-primary">{Math.round(prop.area_sqft)}</span> {prop.area_unit || 'sq.ft.'}
                                 </span>
                               )}
                             </div>

@@ -28,6 +28,7 @@ function PropertyForm() {
     zip_code: '',
     country: 'India',
     area_sqft: '',
+    area_unit: 'sq ft',
     floors: '',
     reserve_price: '',
     auction_date: '',
@@ -35,7 +36,9 @@ function PropertyForm() {
     is_featured: false,
     estimated_market_value: '',
     built_up_area: '',
+    built_up_area_unit: 'sq ft',
     total_area: '',
+    total_area_unit: 'sq ft',
     emd: '',
     possession_type: '',
     application_end_date: '',
@@ -60,6 +63,7 @@ function PropertyForm() {
         zip_code: prop.zip_code || '',
         country: prop.country || 'India',
         area_sqft: prop.area_sqft || '',
+        area_unit: prop.area_unit || 'sq ft',
         floors: prop.floors || '',
         reserve_price: prop.reserve_price || '',
         auction_date: prop.auction_date ? prop.auction_date.split('T')[0] : '',
@@ -67,7 +71,9 @@ function PropertyForm() {
         is_featured: prop.is_featured || false,
         estimated_market_value: prop.estimated_market_value || '',
         built_up_area: prop.built_up_area || '',
+        built_up_area_unit: prop.built_up_area_unit || 'sq ft',
         total_area: prop.total_area || '',
+        total_area_unit: prop.total_area_unit || 'sq ft',
         emd: prop.emd || '',
         possession_type: prop.possession_type || '',
         application_end_date: prop.application_end_date ? prop.application_end_date.split('T')[0] : '',
@@ -399,56 +405,115 @@ function PropertyForm() {
         {/* Property Details */}
         <div>
           <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Property Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                Area (sq ft)
-              </label>
-              <input
-                type="number"
-                name="area_sqft"
-                value={formData.area_sqft}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                Built-Up Area (sq ft)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                name="built_up_area"
-                value={formData.built_up_area}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                Total Area (sq ft)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                name="total_area"
-                value={formData.total_area}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                Floors
-              </label>
-              <input
-                type="number"
-                name="floors"
-                value={formData.floors}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Area */}
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    Area
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      name="area_sqft"
+                      value={formData.area_sqft}
+                      onChange={handleChange}
+                      placeholder="Enter value"
+                      className="flex-1 px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                    />
+                    <select
+                      name="area_unit"
+                      value={formData.area_unit}
+                      onChange={handleChange}
+                      className="px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      <option value="sq ft">sq ft</option>
+                      <option value="sq yards">sq yards</option>
+                      <option value="acres">acres</option>
+                      <option value="gajj">gajj</option>
+                      <option value="sq meters">sq meters</option>
+                      <option value="hectare">hectare</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Built-Up Area */}
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    Built-Up Area
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="built_up_area"
+                      value={formData.built_up_area}
+                      onChange={handleChange}
+                      placeholder="Enter value"
+                      className="flex-1 px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                    />
+                    <select
+                      name="built_up_area_unit"
+                      value={formData.built_up_area_unit}
+                      onChange={handleChange}
+                      className="px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      <option value="sq ft">sq ft</option>
+                      <option value="sq yards">sq yards</option>
+                      <option value="acres">acres</option>
+                      <option value="gajj">gajj</option>
+                      <option value="sq meters">sq meters</option>
+                      <option value="hectare">hectare</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Total Area */}
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    Total Area
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="total_area"
+                      value={formData.total_area}
+                      onChange={handleChange}
+                      placeholder="Enter value"
+                      className="flex-1 px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                    />
+                    <select
+                      name="total_area_unit"
+                      value={formData.total_area_unit}
+                      onChange={handleChange}
+                      className="px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      <option value="sq ft">sq ft</option>
+                      <option value="sq yards">sq yards</option>
+                      <option value="acres">acres</option>
+                      <option value="gajj">gajj</option>
+                      <option value="sq meters">sq meters</option>
+                      <option value="hectare">hectare</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Floors */}
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    Floors
+                  </label>
+                  <input
+                    type="number"
+                    name="floors"
+                    value={formData.floors}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -531,8 +596,9 @@ function PropertyForm() {
                 className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               >
                 <option value="">Select Possession Type</option>
-                <option value="Physical">Physical Possession</option>
-                <option value="Virtual">Virtual Possession</option>
+                <option value="Physical Possession">Physical Possession</option>
+                <option value="Symbolic Possession">Symbolic Possession</option>
+                <option value="NA">NA</option>
               </select>
             </div>
             {isEdit && (

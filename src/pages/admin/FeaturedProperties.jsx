@@ -160,7 +160,7 @@ function FeaturedProperties() {
                     <div className="grid grid-cols-2 gap-2 mb-4 text-xs text-text-secondary">
                       <div className="text-center">
                         <div className="font-semibold text-white">{property.area_sqft ? `${property.area_sqft}` : '-'}</div>
-                        <div>Sqft</div>
+                        <div>{property.area_unit || 'Sqft'}</div>
                       </div>
                     </div>
 
