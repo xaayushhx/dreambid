@@ -1,8 +1,9 @@
 import express from 'express';
 import { body, validationResult, query } from 'express-validator';
-import pool from '../config/database.js';
+import pool, { queryWithRetry } from '../config/database.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { uploadImages, uploadPdf, getFileUrl } from '../middleware/upload.js';
+import { executeWithRetry } from '../utils/dbRetry.js';
 
 const router = express.Router();
 
@@ -281,90 +282,148 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
       coverImage
     } = req.body;
 
-    // Determine cover image - store as reference, not full base64 data
-    let coverImageUrl = null;
-    let coverImageIndex = null;
-    if (images && Array.isArray(images) && images.length > 0) {
-      if (coverImage && coverImage.type === 'new' && coverImage.index !== undefined) {
-        // Use the selected new image as cover - store index for later reference
-        coverImageIndex = coverImage.index;
-        coverImageUrl = null; // Will be set after images are saved
-      } else if (!coverImage || coverImage.type === 'new') {
-        // If no cover image selected or trying to use non-existent new image, use first image
-        coverImageIndex = 0;
-        coverImageUrl = null; // Will be set after images are saved
-      }
-    }
-
-    // Determine status based on auction_date
-    const now = new Date();
-    const auctionDate = new Date(auction_date);
-    const propertyStatus = auctionDate <= now ? 'active' : 'upcoming';
-
-    // Create property
-    const propertyResult = await pool.query(
-      `INSERT INTO properties (
-        title, description, property_type, address, city, state, zip_code, country,
-        area_sqft, bedrooms, bathrooms, floors,
-        reserve_price, auction_date, auction_time, cover_image_url, created_by,
-        estimated_market_value, built_up_area, total_area, emd, possession_type, application_end_date,
-        map_embed_code, is_active, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
-      RETURNING *`,
-      [
-        title, description || null, property_type || null, address, city,
-        state || null, zip_code || null, country || 'India',
-        area_sqft ? parseFloat(area_sqft) : null,
-        bedrooms ? parseInt(bedrooms) : null, bathrooms ? parseInt(bathrooms) : null,
-        floors ? parseInt(floors) : null,
-        parseFloat(reserve_price), new Date(auction_date), auction_time || null, coverImageUrl, req.user.id,
-        estimated_market_value ? parseFloat(estimated_market_value) : null,
-        built_up_area ? parseFloat(built_up_area) : null,
-        total_area ? parseFloat(total_area) : null,
-        emd ? parseFloat(emd) : null,
-        possession_type || null,
-        application_end_date ? new Date(application_end_date) : null,
-        map_embed_code || null,
-        true, // is_active = true
-        propertyStatus // status = 'active' or 'upcoming'
-      ]
-    );
-
-    const property = propertyResult.rows[0];
-
-    // Save base64 images
-    if (images && Array.isArray(images)) {
-      for (let i = 0; i < images.length; i++) {
-        const imageObj = images[i];
-        
-        // Extract base64 data from data URL
-        let base64Data = imageObj.data;
-        if (base64Data.startsWith('data:')) {
-          base64Data = base64Data.split(',')[1];
+    // Wrap entire operation in retry logic for transient DB errors
+    const property = await executeWithRetry(async () => {
+      // Determine cover image - store as reference, not full base64 data
+      let coverImageUrl = null;
+      let coverImageIndex = null;
+      if (images && Array.isArray(images) && images.length > 0) {
+        if (coverImage && coverImage.type === 'new' && coverImage.index !== undefined) {
+          // Use the selected new image as cover - store index for later reference
+          coverImageIndex = coverImage.index;
+          coverImageUrl = null; // Will be set after images are saved
+        } else if (!coverImage || coverImage.type === 'new') {
+          // If no cover image selected or trying to use non-existent new image, use first image
+          coverImageIndex = 0;
+          coverImageUrl = null; // Will be set after images are saved
         }
-        
-        const buffer = Buffer.from(base64Data, 'base64');
-        
-        await pool.query(
-          'INSERT INTO property_images (property_id, image_data, image_mime_type, image_url, image_order) VALUES ($1, $2, $3, $4, $5)',
-          [property.id, buffer, imageObj.mimeType || 'image/jpeg', imageObj.name || `image-${i}`, i]
-        );
       }
 
-      // If a specific image was marked as cover, update the cover_image_url with a marker
-      if (coverImageIndex !== null) {
-        // Store a marker that indicates images exist and should be fetched from property_images table
-        await pool.query(
-          'UPDATE properties SET cover_image_url = $1 WHERE id = $2',
-          ['data:image/stored', property.id]
-        );
+      // Determine status based on auction_date
+      const now = new Date();
+      const auctionDate = new Date(auction_date);
+      const propertyStatus = auctionDate <= now ? 'active' : 'upcoming';
+
+      // Create property with retry
+      const propertyResult = await queryWithRetry(
+        `INSERT INTO properties (
+          title, description, property_type, address, city, state, zip_code, country,
+          area_sqft, area_unit, bedrooms, bathrooms, floors,
+          reserve_price, auction_date, auction_time, cover_image_url, created_by,
+          estimated_market_value, built_up_area, built_up_area_unit, total_area, total_area_unit, emd, possession_type, application_end_date,
+          map_embed_code, is_active, status
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
+        RETURNING *`,
+        [
+          title, description || null, property_type || null, address, city,
+          state || null, zip_code || null, country || 'India',
+          area_sqft ? parseFloat(area_sqft) : null, req.body.area_unit || 'sq ft',
+          bedrooms ? parseInt(bedrooms) : null, bathrooms ? parseInt(bathrooms) : null,
+          floors ? parseInt(floors) : null,
+          parseFloat(reserve_price), new Date(auction_date), auction_time || null, coverImageUrl, req.user.id,
+          estimated_market_value ? parseFloat(estimated_market_value) : null,
+          built_up_area ? parseFloat(built_up_area) : null, req.body.built_up_area_unit || 'sq ft',
+          total_area ? parseFloat(total_area) : null, req.body.total_area_unit || 'sq ft',
+          emd ? parseFloat(emd) : null,
+          possession_type || null,
+          application_end_date ? new Date(application_end_date) : null,
+          map_embed_code || null,
+          true, // is_active = true
+          propertyStatus // status = 'active' or 'upcoming'
+        ]
+      );
+
+      const property = propertyResult.rows[0];
+
+      // Save base64 images with parallel processing (faster than sequential)
+      if (images && Array.isArray(images) && images.length > 0) {
+        try {
+          // Process images in batches to avoid overwhelming the connection pool
+          const batchSize = 5; // Process 5 images at a time
+          const imageBatches = [];
+          
+          for (let i = 0; i < images.length; i += batchSize) {
+            const batch = images.slice(i, i + batchSize).map(async (imageObj, idx) => {
+              const imageIndex = i + idx;
+              
+              try {
+                // Extract base64 data from data URL
+                let base64Data = imageObj.data;
+                if (base64Data.startsWith('data:')) {
+                  base64Data = base64Data.split(',')[1];
+                }
+                
+                const buffer = Buffer.from(base64Data, 'base64');
+                
+                await queryWithRetry(
+                  'INSERT INTO property_images (property_id, image_data, image_mime_type, image_url, image_order, is_cover) VALUES ($1, $2, $3, $4, $5, $6)',
+                  [
+                    property.id, 
+                    buffer, 
+                    imageObj.mimeType || 'image/jpeg', 
+                    imageObj.name || `image-${imageIndex}`, 
+                    imageIndex,
+                    imageIndex === 0 ? true : false // Mark first image as cover by default
+                  ],
+                  3 // Retry up to 3 times per image
+                );
+                console.log(`✅ Image ${imageIndex + 1}/${images.length} saved`);
+              } catch (err) {
+                console.error(`❌ Failed to save image ${imageIndex + 1}:`, err.message);
+                throw err;
+              }
+            });
+            
+            imageBatches.push(...batch);
+          }
+          
+          // Wait for all image insertions to complete
+          await Promise.all(imageBatches);
+          console.log(`✅ All ${images.length} images saved successfully`);
+
+          // Update property with cover image marker
+          await queryWithRetry(
+            'UPDATE properties SET cover_image_url = $1 WHERE id = $2',
+            ['data:image/stored', property.id],
+            2
+          );
+        } catch (imageError) {
+          console.error('Error processing images, but property created:', imageError.message);
+          // Property was created, but images failed - return property anyway
+          // Frontend will handle missing images gracefully
+        }
       }
-    }
+
+      // Fetch complete property with images for response
+      const propertyWithImages = await queryWithRetry(
+        `SELECT p.*, 
+          json_agg(
+            json_build_object(
+              'id', pi.id,
+              'image_url', pi.image_url,
+              'image_order', pi.image_order,
+              'is_cover', pi.is_cover
+            ) ORDER BY pi.image_order
+          ) FILTER (WHERE pi.id IS NOT NULL) as images
+        FROM properties p
+        LEFT JOIN property_images pi ON p.id = pi.property_id
+        WHERE p.id = $1
+        GROUP BY p.id`,
+        [property.id],
+        2
+      );
+
+      return propertyWithImages.rows[0];
+    }, 3); // Retry up to 3 times for property creation
 
     res.status(201).json({ message: 'Property created successfully', data: { property } });
   } catch (error) {
     console.error('Create property error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ 
+      message: 'Failed to create property', 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Database operation failed. Please try again.'
+    });
   }
 });
 

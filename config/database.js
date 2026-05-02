@@ -41,7 +41,9 @@ if (databaseUrl) {
     ssl: { rejectUnauthorized: false }, // Neon requires SSL
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 5000, // Increased timeout for cold starts
+    statement_timeout: 10000, // Statement timeout
+    application_name: 'dreambid-app',
   };
 } else {
   dbConfig = {
@@ -51,7 +53,8 @@ if (databaseUrl) {
     user: process.env.DB_USER || 'postgres',
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 5000,
+    statement_timeout: 10000,
   };
 
   // Only add password if it's provided (allows empty string for no password)
@@ -62,10 +65,69 @@ if (databaseUrl) {
 
 const pool = new Pool(dbConfig);
 
+// Keep DB warm - ping every 30 seconds to prevent sleep/cold start
+const keepAliveInterval = setInterval(async () => {
+  try {
+    await pool.query('SELECT 1');
+  } catch (err) {
+    console.warn('⚠️  Keep-alive ping failed:', err.message);
+  }
+}, 30000); // Every 30 seconds
+
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+  // Don't exit process, just log the error
+  process.exitCode = -1;
 });
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  clearInterval(keepAliveInterval);
+  pool.end();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  clearInterval(keepAliveInterval);
+  pool.end();
+  process.exit(0);
+});
+
+// Retry wrapper function - retry DB query 2-3 times before failing
+export const queryWithRetry = async (query, params, maxRetries = 2) => {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+    try {
+      const result = await pool.query(query, params);
+      if (attempt > 1) {
+        console.log(`✅ Query succeeded on attempt ${attempt}/${maxRetries + 1}`);
+      }
+      return result;
+    } catch (err) {
+      lastError = err;
+      console.warn(`⚠️  Query attempt ${attempt}/${maxRetries + 1} failed:`, err.message);
+      
+      // Only retry on connection errors or timeout errors
+      const isRetryableError = err.code === 'ECONNREFUSED' || 
+                               err.code === 'ETIMEDOUT' ||
+                               err.code === 'ENOTFOUND' ||
+                               err.message.includes('timeout') ||
+                               err.message.includes('connection') ||
+                               err.message.includes('FATAL');
+      
+      if (!isRetryableError || attempt === maxRetries + 1) {
+        throw lastError;
+      }
+      
+      // Exponential backoff: 100ms, 200ms
+      const delay = Math.min(100 * Math.pow(2, attempt - 1), 1000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+};
 
 // Test connection
 pool.query('SELECT NOW()', (err, res) => {
