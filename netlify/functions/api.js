@@ -27,8 +27,8 @@ const app = express();
 
 // CORS Configuration
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://dreambid-p.netlify.app',
-  'https://dreambid-p.netlify.app',
+  process.env.FRONTEND_URL || 'https://dreambidp.netlify.app',
+  'https://dreambidp.netlify.app',
   '*' // Allow all origins for mobile app
 ];
 
