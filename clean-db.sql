@@ -12,6 +12,7 @@
 -- ============================================================
 
 -- Drop dependent tables first (those with foreign keys)
+DROP TABLE IF EXISTS notification_tokens CASCADE;
 DROP TABLE IF EXISTS user_registrations CASCADE;
 DROP TABLE IF EXISTS blog_images CASCADE;
 DROP TABLE IF EXISTS blogs CASCADE;
@@ -207,6 +208,19 @@ CREATE TABLE user_registrations (
 );
 
 -- ============================================================
+-- 9. NOTIFICATION TOKENS TABLE - Device tokens for push notifications
+-- ============================================================
+CREATE TABLE notification_tokens (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  device_token VARCHAR(255) NOT NULL UNIQUE,
+  platform VARCHAR(20) CHECK (platform IN ('ios', 'android')) NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================================
 -- STEP 3: CREATE INDEXES - Performance optimization
 -- ============================================================
 
@@ -263,6 +277,12 @@ CREATE INDEX idx_blogs_is_featured ON blogs(is_featured);
 CREATE INDEX idx_user_registrations_created_at ON user_registrations(created_at DESC);
 CREATE INDEX idx_user_registrations_contact ON user_registrations(contact_number);
 
+-- Notification Tokens indexes
+CREATE INDEX idx_notification_tokens_user_id ON notification_tokens(user_id);
+CREATE INDEX idx_notification_tokens_device_token ON notification_tokens(device_token);
+CREATE INDEX idx_notification_tokens_is_active ON notification_tokens(is_active);
+CREATE INDEX idx_notification_tokens_user_active ON notification_tokens(user_id, is_active);
+
 -- ============================================================
 -- STEP 4: INSERT FRESH ADMIN USER
 -- ============================================================
@@ -284,8 +304,8 @@ VALUES ('admin@dreambid.com', '$2a$10$53Do2hAKDxUAGWI8JDWAbu8B4gRgIJR0xM1MGXeyWg
 -- ============================================================
 -- Database is now fresh and clean!
 -- All tables have been recreated with:
--- ✓ 8 tables with proper structure
--- ✓ 42 performance indexes
+-- ✓ 9 tables with proper structure
+-- ✓ 46 performance indexes
 -- ✓ 1 default admin user (ready to use)
 -- ✓ All data integrity constraints in place
 --

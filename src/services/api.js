@@ -78,8 +78,12 @@ export const activityAPI = {
 export const propertiesAPI = {
   getAll: (params) => api.get('/properties', { params }),
   getById: (id) => api.get(`/properties/${id}`),
-  create: (data) => api.post('/properties', data),
-  update: (id, data) => api.put(`/properties/${id}`, data),
+  create: (formData) => api.post('/properties', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  update: (id, formData) => api.put(`/properties/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   delete: (id) => api.delete(`/properties/${id}`),
   uploadPdf: (id, formData) => api.post(`/properties/${id}/pdf`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
@@ -87,9 +91,23 @@ export const propertiesAPI = {
 };
 
 export const enquiriesAPI = {
-  create: (data) => api.post('/enquiries', data),
+  create: (data) => {
+    // If FormData, use multipart/form-data; otherwise use JSON
+    if (data instanceof FormData) {
+      return api.post('/enquiries', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+    return api.post('/enquiries', data);
+  },
   getAll: (params) => api.get('/enquiries', { params }),
   updateStatus: (id, status) => api.put(`/enquiries/${id}/status`, { status }),
+};
+
+export const contactAPI = {
+  submit: (formData) => api.post('/enquiries/contact', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 export const interestsAPI = {

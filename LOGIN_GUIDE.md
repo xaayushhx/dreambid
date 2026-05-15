@@ -167,7 +167,7 @@ curl https://dreambidapp.netlify.app/api/auth/me \
 - **Solution**:
   - Check Netlify environment variables
   - Ensure `NETLIFY_DATABASE_URL` is set in Build & Deploy settings
-  - Verify Neon PostgreSQL connection string
+  - Verify PostgreSQL connection string
 
 ---
 
@@ -216,7 +216,8 @@ curl https://dreambidapp.netlify.app/api/auth/me \
 - [Bcrypt Password Hashing](https://github.com/dcodeIO/bcrypt.js)
 - [JWT Authentication](https://jwt.io/)
 - [Netlify Environment Variables](https://docs.netlify.com/configure-builds/environment-variables/)
-- [Neon PostgreSQL](https://neon.tech/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [Railway Documentation](https://docs.railway.app/)
 
 ---
 

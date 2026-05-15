@@ -1,7 +1,7 @@
-# Database Connection Fixes for Neon DB on Netlify
+# Database Connection Fixes for PostgreSQL on Netlify
 
 ## Problem
-Neon DB connections on Netlify serverless sometimes timeout or fail during form submissions due to:
+PostgreSQL connections on Netlify serverless sometimes timeout or fail during form submissions due to:
 - Cold starts (database connection pool not warm)
 - Transient network errors
 - Initial connection timeouts
@@ -49,8 +49,8 @@ setInterval(async () => {
 - **Settings**:
   - `max: 20` - Max concurrent connections
   - `idleTimeoutMillis: 30000` - Keep idle connections for 30 seconds
-  - `application_name: 'dreambid-app'` - For monitoring in Neon console
-  - `ssl: { rejectUnauthorized: false }` - Required for Neon
+  - `application_name: 'dreambid-app'` - For monitoring and connection tracking
+  - `ssl: { rejectUnauthorized: false }` - For secure database connections
 
 ## Implementation Details
 
@@ -124,7 +124,7 @@ Run migration to add columns:
 node migrations/08_add_area_units.js
 ```
 
-Or manually in Neon:
+Or manually in your database:
 ```sql
 ALTER TABLE properties 
 ADD COLUMN area_unit VARCHAR(50) DEFAULT 'sq ft',
@@ -137,12 +137,12 @@ ADD COLUMN total_area_unit VARCHAR(50) DEFAULT 'sq ft';
 npm run build
 npx cap sync
 git add -A
-git commit -m "feat: add Neon DB connection fixes with retry logic and keep-alive"
+git commit -m "feat: add PostgreSQL connection fixes with retry logic and keep-alive"
 git push origin main
 ```
 
-### Step 3: Monitor Neon Dashboard
-After deployment, check Neon console for:
+### Step 3: Monitor Your Database
+After deployment, monitor your database for:
 - Connection activity
 - Query latency
 - Error patterns
@@ -172,9 +172,9 @@ You'll see logs like:
 
 ## Environment Variables
 
-Ensure these are set in Netlify:
+Ensure these are set in your deployment platform:
 ```
-DATABASE_URL=postgresql://...@db.neon.tech/dreambid?schema=public
+DATABASE_URL=postgresql://user:password@host/database
 NODE_ENV=production
 ```
 
@@ -182,7 +182,7 @@ NODE_ENV=production
 
 ### Check Connection Health
 ```sql
--- In Neon console SQL editor
+-- In your database SQL editor
 SELECT * FROM pg_stat_activity;
 ```
 
@@ -225,7 +225,7 @@ connectionTimeoutMillis: 2000, // Original value
 
 ## Additional Resources
 
-- [Neon Documentation](https://neon.tech/docs)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Netlify Docs](https://docs.netlify.com)
 - [Node.js pg module](https://node-postgres.com)
 - [PostgreSQL Connection Settings](https://www.postgresql.org/docs/current/runtime-config-client.html)

@@ -397,7 +397,7 @@ psql -d dreambid -f init.sql
 npm run seed
 ```
 
-#### Option B: Cloud Database (Neon, Railway, Render)
+#### Option B: Cloud Database (Railway, Render)
 
 1. Create a PostgreSQL instance on your cloud provider
 2. Copy the connection string to `DATABASE_URL` in `.env.local`

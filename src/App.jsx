@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { ShortlistProvider } from './contexts/ShortlistContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 // Layout Components
 import PublicLayout from './components/PublicLayout';
@@ -56,9 +57,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ShortlistProvider>
-          <Router>
-            <div className="min-h-screen bg-gray-50">
-              <WhatsAppFloat />
+          <NotificationProvider>
+            <Router>
+              <div className="min-h-screen bg-gray-50">
+                <WhatsAppFloat />
               <Routes>
               {/* Public Routes */}
               <Route path="/" element={<PublicLayout />}>
@@ -130,8 +132,7 @@ function App() {
               }}
             />
           </div>
-        </Router>
-        </ShortlistProvider>
+        </Router>          </NotificationProvider>        </ShortlistProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

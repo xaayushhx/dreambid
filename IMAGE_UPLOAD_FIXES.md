@@ -163,7 +163,7 @@ Run migration to add `is_cover` column:
 node migrations/08_add_area_units.js
 ```
 
-Or manually in Neon:
+Or manually in your database:
 ```sql
 ALTER TABLE property_images 
 ADD COLUMN is_cover BOOLEAN DEFAULT false;
@@ -261,8 +261,8 @@ LIMIT 10;
 ### Still Getting Timeout with Multiple Images
 1. Check connection pool size in `config/database.js`
 2. Reduce batch size: `batchSize = 3` instead of 5
-3. Verify network latency to Neon DB
-4. Check Neon server status
+3. Verify network latency to your database
+4. Check database server status
 
 ### Images Showing but Very Slow
 1. Compress images before upload (frontend)
