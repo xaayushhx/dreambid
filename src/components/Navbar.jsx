@@ -39,7 +39,7 @@ function Navbar() {
             onClick={closeMenu}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-300"
           >
-            <img src="/Dreambid_logo2.svg" alt="DreamBid" className="w-10 h-10 md:w-12 md:h-12" />
+            <img src="/Dreambid_logo2.svg" alt="DreamBid" className="w-12 h-12 md:w-16 md:h-16" />
             <span className="text-xl md:text-2xl font-semibold text-white hidden sm:inline">
               Dream<span className="text-red-500">Bid</span>
             </span>
