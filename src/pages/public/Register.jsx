@@ -23,10 +23,19 @@ function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [activeRequirementTab, setActiveRequirementTab] = useState(0);
+  const [attachments, setAttachments] = useState([]);
 
   // Mutation for submitting registration
   const registerMutation = useMutation(
-    (data) => api.post('/user-registrations', data),
+    (data) => {
+      // Use multipart/form-data for file uploads
+      if (data instanceof FormData) {
+        return api.post('/user-registrations', data, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      return api.post('/user-registrations', data);
+    },
     {
       onSuccess: () => {
         toast.success('Registration successful! We will contact you soon.');
@@ -106,6 +115,16 @@ function Register() {
     }
   };
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 5) {
+      toast.error('Maximum 5 files allowed');
+      setAttachments(files.slice(0, 5));
+    } else {
+      setAttachments(files);
+    }
+  };
+
   const addRequirement = () => {
     setFormData(prev => ({
       ...prev,
@@ -147,7 +166,18 @@ function Register() {
       return;
     }
 
-    registerMutation.mutate(formData);
+    // Create FormData for submission (supports file uploads)
+    const submitData = new FormData();
+    submitData.append('name', formData.name);
+    submitData.append('contactNumber', formData.contactNumber);
+    submitData.append('requirements', JSON.stringify(formData.requirements));
+    
+    // Add attachments if present
+    attachments.forEach((file, index) => {
+      submitData.append(`attachment`, file);
+    });
+
+    registerMutation.mutate(submitData);
   };
 
   const budgetOptions = [

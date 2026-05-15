@@ -32,13 +32,13 @@ if (process.env.NODE_ENV !== 'production') {
 // Build connection config
 let dbConfig;
 
-// Use DATABASE_URL if available (Neon/Railway/Render), otherwise use NETLIFY_DATABASE_URL, otherwise use individual env vars
+// Use DATABASE_URL if available (Railway/Render), otherwise use NETLIFY_DATABASE_URL, otherwise use individual env vars
 const databaseUrl = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
 
 if (databaseUrl) {
   dbConfig = {
     connectionString: databaseUrl,
-    ssl: { rejectUnauthorized: false }, // Neon requires SSL
+    ssl: { rejectUnauthorized: false },
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000, // Increased timeout for cold starts

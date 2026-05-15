@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { contactAPI } from '../../services/api';
 
 function Contact() {
   const [formData, setFormData] = useState({
@@ -61,8 +62,22 @@ function Contact() {
         return;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Create FormData for multipart submission
+      const submitData = new FormData();
+      submitData.append('name', formData.name);
+      submitData.append('email', formData.email);
+      submitData.append('contactNumber', formData.contactNumber);
+      submitData.append('contactingAs', formData.contactingAs);
+      submitData.append('message', formData.message);
       
+      // Add attachment if present
+      if (formData.attachment) {
+        submitData.append('attachment', formData.attachment);
+      }
+
+      // Make API request
+      await contactAPI.submit(submitData);
+
       toast.success('Thank you! We will contact you soon.');
       setFormData({
         name: '',
@@ -75,7 +90,7 @@ function Contact() {
       setAcceptedTerms(false);
       setAcceptNewsletter(false);
     } catch (error) {
-      toast.error('Something went wrong. Please try again.');
+      toast.error(error.response?.data?.message || 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

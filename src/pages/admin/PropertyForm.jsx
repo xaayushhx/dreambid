@@ -153,15 +153,6 @@ function PropertyForm() {
     }
   };
 
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
   const handleRemoveExistingImage = (imageId) => {
     setExistingImages(prev => prev.filter(img => img.id !== imageId));
     setImagesToRemove(prev => [...prev, imageId]);
@@ -176,54 +167,50 @@ function PropertyForm() {
     e.preventDefault();
 
     try {
-      // Convert images to base64
-      const imageDataArray = [];
-      for (const image of images) {
-        const base64Data = await fileToBase64(image);
-        imageDataArray.push({
-          data: base64Data,
-          mimeType: image.type,
-          name: image.name
-        });
-      }
+      // Create FormData for multipart/form-data upload
+      const submitFormData = new FormData();
 
-      // Determine cover image
-      let coverImageSelection = null;
+      // Add form fields
+      Object.keys(formData).forEach(key => {
+        submitFormData.append(key, formData[key]);
+      });
+
+      // Add new images
+      images.forEach((image, index) => {
+        submitFormData.append(`images`, image);
+      });
+
+      // Determine and add cover image
       if (coverImageId) {
         if (typeof coverImageId === 'string' && coverImageId.startsWith('new-')) {
           // Cover is from new images
           const newImageIndex = parseInt(coverImageId.split('-')[1]);
-          coverImageSelection = {
+          submitFormData.append('coverImage', JSON.stringify({
             type: 'new',
             index: newImageIndex
-          };
+          }));
         } else {
           // Cover is from existing images (edit mode)
-          coverImageSelection = {
+          submitFormData.append('coverImage', JSON.stringify({
             type: 'existing',
             id: coverImageId
-          };
+          }));
         }
       }
 
-      // Create submit data object
-      const submitData = {
-        ...formData,
-        images: imageDataArray,
-        ...(coverImageSelection && { coverImage: coverImageSelection }),
-        ...(isEdit && {
-          removeImageIds: imagesToRemove
-        })
-      };
+      // Add images to remove (edit mode)
+      if (isEdit && imagesToRemove.length > 0) {
+        submitFormData.append('removeImageIds', JSON.stringify(imagesToRemove));
+      }
 
       if (isEdit) {
-        updateMutation.mutate(submitData);
+        updateMutation.mutate(submitFormData);
       } else {
-        createMutation.mutate(submitData);
+        createMutation.mutate(submitFormData);
       }
     } catch (error) {
-      toast.error('Failed to process images');
-      console.error('Image processing error:', error);
+      toast.error('Failed to process form');
+      console.error('Form processing error:', error);
     }
   };
 

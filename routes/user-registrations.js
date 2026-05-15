@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
+import { notifyAdminsOfRegistration } from '../services/NotificationService.js';
 
 const router = express.Router();
 
@@ -40,6 +41,17 @@ router.post('/', async (req, res) => {
        RETURNING id, name, contact_number, requirements, created_at`,
       [name, contactNumber, JSON.stringify(requirements)]
     );
+
+    // Send notification to admins (async, don't wait)
+    notifyAdminsOfRegistration({
+      name,
+      email: 'Not provided',
+      phone: contactNumber,
+      registrationType: 'property requirement',
+    }).catch(error => {
+      console.error('Failed to send registration notification to admins:', error);
+      // Don't fail the request if notification fails
+    });
 
     res.status(201).json({
       message: 'Registration saved successfully',

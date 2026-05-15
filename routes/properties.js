@@ -239,7 +239,7 @@ router.get('/', [
 // @route   POST /api/properties
 // @desc    Create new property
 // @access  Private (Admin/Staff)
-router.post('/', authenticate, authorize('admin', 'staff'), [
+router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
   body('title').trim().notEmpty(),
   body('description').optional().trim(),
   body('address').trim().notEmpty(),
@@ -278,24 +278,34 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
       possession_type,
       application_end_date,
       map_embed_code,
-      images,
       coverImage
     } = req.body;
+
+    // Get uploaded files from multer
+    const uploadedImages = req.files?.images || [];
+    let coverImageData = null;
+    if (req.body.coverImage) {
+      try {
+        coverImageData = JSON.parse(req.body.coverImage);
+      } catch (e) {
+        // coverImage might be invalid JSON, ignore
+      }
+    }
 
     // Wrap entire operation in retry logic for transient DB errors
     const property = await executeWithRetry(async () => {
       // Determine cover image - store as reference, not full base64 data
       let coverImageUrl = null;
       let coverImageIndex = null;
-      if (images && Array.isArray(images) && images.length > 0) {
-        if (coverImage && coverImage.type === 'new' && coverImage.index !== undefined) {
-          // Use the selected new image as cover - store index for later reference
-          coverImageIndex = coverImage.index;
+      if (uploadedImages && Array.isArray(uploadedImages) && uploadedImages.length > 0) {
+        if (coverImageData && coverImageData.type === 'new' && coverImageData.index !== undefined) {
+          // Use the selected new image as cover
+          coverImageIndex = coverImageData.index;
           coverImageUrl = null; // Will be set after images are saved
-        } else if (!coverImage || coverImage.type === 'new') {
-          // If no cover image selected or trying to use non-existent new image, use first image
+        } else {
+          // Use first image as cover by default
           coverImageIndex = 0;
-          coverImageUrl = null; // Will be set after images are saved
+          coverImageUrl = null;
         }
       }
 
@@ -335,39 +345,32 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
 
       const property = propertyResult.rows[0];
 
-      // Save base64 images with parallel processing (faster than sequential)
-      if (images && Array.isArray(images) && images.length > 0) {
+      // Save images with parallel processing (faster than sequential)
+      if (uploadedImages && Array.isArray(uploadedImages) && uploadedImages.length > 0) {
         try {
           // Process images in batches to avoid overwhelming the connection pool
           const batchSize = 5; // Process 5 images at a time
           const imageBatches = [];
           
-          for (let i = 0; i < images.length; i += batchSize) {
-            const batch = images.slice(i, i + batchSize).map(async (imageObj, idx) => {
+          for (let i = 0; i < uploadedImages.length; i += batchSize) {
+            const batch = uploadedImages.slice(i, i + batchSize).map(async (file, idx) => {
               const imageIndex = i + idx;
               
               try {
-                // Extract base64 data from data URL
-                let base64Data = imageObj.data;
-                if (base64Data.startsWith('data:')) {
-                  base64Data = base64Data.split(',')[1];
-                }
-                
-                const buffer = Buffer.from(base64Data, 'base64');
-                
+                // File buffer is already from multer, no base64 conversion needed
                 await queryWithRetry(
                   'INSERT INTO property_images (property_id, image_data, image_mime_type, image_url, image_order, is_cover) VALUES ($1, $2, $3, $4, $5, $6)',
                   [
                     property.id, 
-                    buffer, 
-                    imageObj.mimeType || 'image/jpeg', 
-                    imageObj.name || `image-${imageIndex}`, 
+                    file.buffer, // Use buffer directly from multer
+                    file.mimetype, // Use mimetype from multer
+                    file.originalname,
                     imageIndex,
-                    imageIndex === 0 ? true : false // Mark first image as cover by default
+                    imageIndex === coverImageIndex ? true : false // Mark cover image
                   ],
                   3 // Retry up to 3 times per image
                 );
-                console.log(`✅ Image ${imageIndex + 1}/${images.length} saved`);
+                console.log(`✅ Image ${imageIndex + 1}/${uploadedImages.length} saved`);
               } catch (err) {
                 console.error(`❌ Failed to save image ${imageIndex + 1}:`, err.message);
                 throw err;
@@ -379,7 +382,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), [
           
           // Wait for all image insertions to complete
           await Promise.all(imageBatches);
-          console.log(`✅ All ${images.length} images saved successfully`);
+          console.log(`✅ All ${uploadedImages.length} images saved successfully`);
 
           // Update property with cover image marker
           await queryWithRetry(
@@ -464,7 +467,7 @@ router.get('/:id/images', async (req, res) => {
 // @route   PUT /api/properties/:id
 // @desc    Update property
 // @access  Private (Admin/Staff)
-router.put('/:id', authenticate, authorize('admin', 'staff'), async (req, res) => {
+router.put('/:id', authenticate, authorize('admin', 'staff'), uploadImages, async (req, res) => {
   try {
     const { id } = req.params;
 

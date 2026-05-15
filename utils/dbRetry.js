@@ -1,6 +1,6 @@
 /**
  * Database retry utility for handling transient connection errors
- * Implements exponential backoff and retry logic for Neon DB on Netlify
+ * Implements exponential backoff and retry logic for PostgreSQL on serverless
  */
 
 export const isRetryableError = (error) => {

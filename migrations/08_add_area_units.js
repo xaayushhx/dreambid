@@ -3,7 +3,7 @@
  * This migration adds:
  * - Unit columns for area fields (sq ft, sq yards, acres, etc.)
  * - is_cover column for marking cover images
- * Run this migration to update existing Neon DB schema
+ * Run this migration to update existing database schema
  */
 
 import pool from '../config/database.js';
