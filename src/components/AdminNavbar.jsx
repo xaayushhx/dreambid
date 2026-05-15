@@ -26,9 +26,10 @@ function AdminNavbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-4 sm:space-x-8">
-            <Link to="/admin/dashboard" className="text-lg sm:text-xl font-bold text-gold hover:text-gold-hover transition-colors">
-              DreamBid Admin
+          <div className="flex items-center space-x-3 sm:space-x-6">
+            <Link to="/admin/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <img src="/Dreambid_logo2.svg" alt="DreamBid" className="w-8 h-8 sm:w-10 sm:h-10" />
+              <span className="text-lg sm:text-xl font-bold text-gold hover:text-gold-hover transition-colors hidden sm:inline">DreamBid Admin</span>
             </Link>
             
             {/* Desktop Navigation Links */}

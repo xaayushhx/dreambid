@@ -1,0 +1,40 @@
+{
+  "name": "DreamBid - Property Auctions",
+  "short_name": "DreamBid",
+  "description": "DreamBid - Property Auction Platform",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0E1A2B",
+  "background_color": "#0E1A2B",
+  "icons": [
+    {
+      "src": "/Dreambid_logo2.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/Dreambid_logo2.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/Dreambid_logo2.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "real-estate"],
+  "screenshots": [
+    {
+      "src": "/banner.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}

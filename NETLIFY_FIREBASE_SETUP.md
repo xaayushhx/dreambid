@@ -38,13 +38,16 @@ Click **Edit variables** and add:
 
 Make sure these variables are also set in Netlify:
 
-```
-DATABASE_URL=postgresql://neondb_owner:npg_71eqQvbLzVwU@ep-polished-cherry-aeocc1g8-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-JWT_SECRET=0f447cc9c8ded8b201ae40e91bb580cf907b70f4b1d4d9952405217507ede22c
+```env
+DATABASE_URL=postgresql://postgres:PASSWORD@host:port/database
+JWT_SECRET=<your-secret-key>
 PORT=3000
 NODE_ENV=production
-FRONTEND_URL=https://dreambid-p.netlify.app/
+FRONTEND_URL=https://dreambidp.netlify.app
+VITE_API_URL=https://dreambid-production.up.railway.app/api
 ```
+
+⚠️ **SECURITY:** Replace DATABASE_URL with your actual Railway database URL, never hardcode credentials in documentation.
 
 ### Step 4: Trigger a Redeploy
 

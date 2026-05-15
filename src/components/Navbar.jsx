@@ -34,18 +34,16 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 md:px-16">
         <div className="flex justify-between items-center py-4 md:py-8">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">D</span>
-            </div>
-            <Link 
-              to="/" 
-              onClick={closeMenu}
-              className="text-xl md:text-2xl font-semibold text-white hover:text-gold transition-all duration-300"
-            >
+          <Link 
+            to="/" 
+            onClick={closeMenu}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-300"
+          >
+            <img src="/Dreambid_logo2.svg" alt="DreamBid" className="w-10 h-10 md:w-12 md:h-12" />
+            <span className="text-xl md:text-2xl font-semibold text-white hidden sm:inline">
               Dream<span className="text-red-500">Bid</span>
-            </Link>
-          </div>
+            </span>
+          </Link>
 
           {/* Desktop Navigation - Menu Dropdown */}
           <div className="hidden md:flex items-center gap-8">
