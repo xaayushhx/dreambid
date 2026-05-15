@@ -250,8 +250,13 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
   body('zip_code').optional().matches(/^\d{6}$/).withMessage('Zip code must be exactly 6 digits'),
 ], async (req, res) => {
   try {
+    console.log('🔍 Property creation request received');
+    console.log('📋 Body keys:', Object.keys(req.body));
+    console.log('📷 Files:', req.files ? Object.keys(req.files) : 'none');
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.warn('❌ Express validator errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -281,8 +286,12 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
       coverImage
     } = req.body;
 
+    console.log('📝 Form data received - reserve_price:', reserve_price, 'type:', typeof reserve_price);
+
     // Get uploaded files from multer
     const uploadedImages = req.files?.images || [];
+    console.log('📸 Images count:', uploadedImages.length);
+    
     let coverImageData = null;
     if (req.body.coverImage) {
       try {
@@ -293,16 +302,21 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
     }
 
     // Validate numeric fields before database insert to prevent NaN/invalid values
+    console.log('🔢 Validating numeric fields...');
+    
     const validatedReservePrice = parseFloat(reserve_price);
     if (isNaN(validatedReservePrice) || validatedReservePrice < 0) {
+      console.warn('❌ Invalid reserve price:', reserve_price);
       return res.status(400).json({ 
         message: 'Invalid reserve price. Must be a valid positive number.' 
       });
     }
+    console.log('✅ Reserve price valid:', validatedReservePrice);
 
     // Validate optional numeric fields
     const validatedAreaSqft = area_sqft ? parseFloat(area_sqft) : null;
     if (area_sqft && (isNaN(validatedAreaSqft) || validatedAreaSqft < 0)) {
+      console.warn('❌ Invalid area:', area_sqft);
       return res.status(400).json({ 
         message: 'Invalid area. Must be a valid positive number.' 
       });
@@ -310,6 +324,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
 
     const validatedBedrooms = bedrooms ? parseInt(bedrooms) : null;
     if (bedrooms && (isNaN(validatedBedrooms) || validatedBedrooms < 0)) {
+      console.warn('❌ Invalid bedrooms:', bedrooms);
       return res.status(400).json({ 
         message: 'Invalid bedrooms. Must be a valid non-negative number.' 
       });
@@ -317,6 +332,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
 
     const validatedBathrooms = bathrooms ? parseInt(bathrooms) : null;
     if (bathrooms && (isNaN(validatedBathrooms) || validatedBathrooms < 0)) {
+      console.warn('❌ Invalid bathrooms:', bathrooms);
       return res.status(400).json({ 
         message: 'Invalid bathrooms. Must be a valid non-negative number.' 
       });
@@ -324,6 +340,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
 
     const validatedFloors = floors ? parseInt(floors) : null;
     if (floors && (isNaN(validatedFloors) || validatedFloors < 0)) {
+      console.warn('❌ Invalid floors:', floors);
       return res.status(400).json({ 
         message: 'Invalid floors. Must be a valid non-negative number.' 
       });
@@ -331,6 +348,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
 
     const validatedEstimatedMarketValue = estimated_market_value ? parseFloat(estimated_market_value) : null;
     if (estimated_market_value && (isNaN(validatedEstimatedMarketValue) || validatedEstimatedMarketValue < 0)) {
+      console.warn('❌ Invalid estimated market value:', estimated_market_value);
       return res.status(400).json({ 
         message: 'Invalid estimated market value. Must be a valid positive number.' 
       });
@@ -338,6 +356,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
 
     const validatedBuiltUpArea = built_up_area ? parseFloat(built_up_area) : null;
     if (built_up_area && (isNaN(validatedBuiltUpArea) || validatedBuiltUpArea < 0)) {
+      console.warn('❌ Invalid built-up area:', built_up_area);
       return res.status(400).json({ 
         message: 'Invalid built-up area. Must be a valid positive number.' 
       });
@@ -345,6 +364,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
 
     const validatedTotalArea = total_area ? parseFloat(total_area) : null;
     if (total_area && (isNaN(validatedTotalArea) || validatedTotalArea < 0)) {
+      console.warn('❌ Invalid total area:', total_area);
       return res.status(400).json({ 
         message: 'Invalid total area. Must be a valid positive number.' 
       });
@@ -360,10 +380,12 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
     // Validate auction date
     const auctionDate = new Date(auction_date);
     if (isNaN(auctionDate.getTime())) {
+      console.warn('❌ Invalid auction date:', auction_date);
       return res.status(400).json({ 
         message: 'Invalid auction date. Must be a valid ISO8601 date.' 
       });
     }
+    console.log('✅ All validations passed. Starting property creation...');
 
     // Wrap entire operation in retry logic for transient DB errors
     const property = await executeWithRetry(async () => {
@@ -394,7 +416,7 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
           reserve_price, auction_date, auction_time, cover_image_url, created_by,
           estimated_market_value, built_up_area, built_up_area_unit, total_area, total_area_unit, emd, possession_type, application_end_date,
           map_embed_code, is_active, status
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
         RETURNING *`,
         [
           title, description || null, property_type || null, address, city,
@@ -484,10 +506,22 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
     res.status(201).json({ message: 'Property created successfully', data: { property } });
   } catch (error) {
     console.error('Create property error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+      message: error.message
+    });
     const statusCode = error.statusCode || 500;
     res.status(statusCode).json({ 
       message: 'Failed to create property', 
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Database operation failed. Please try again.'
+      error: error.message || 'Database operation failed. Please try again.',
+      details: process.env.NODE_ENV === 'development' ? {
+        code: error.code,
+        detail: error.detail,
+        hint: error.hint
+      } : undefined
     });
   }
 });
