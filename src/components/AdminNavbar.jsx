@@ -28,7 +28,7 @@ function AdminNavbar() {
           {/* Logo and Brand */}
           <div className="flex items-center space-x-3 sm:space-x-6">
             <Link to="/admin/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <img src="/Dreambid_logo2.svg" alt="DreamBid" className="w-8 h-8 sm:w-10 sm:h-10" />
+              <img src="/Dreambid_logo2.svg" alt="DreamBid" className="w-10 h-10 sm:w-14 sm:h-14" />
               <span className="text-lg sm:text-xl font-bold text-gold hover:text-gold-hover transition-colors hidden sm:inline">DreamBid Admin</span>
             </Link>
             

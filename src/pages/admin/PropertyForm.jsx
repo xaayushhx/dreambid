@@ -147,9 +147,21 @@ function PropertyForm() {
     const files = Array.from(e.target.files);
     if (files.length > 20) {
       toast.error('Maximum 20 images allowed');
-      setImages(files.slice(0, 20));
+      files.slice(0, 20).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImages(prev => [...prev, { file, data: reader.result }]);
+        };
+        reader.readAsDataURL(file);
+      });
     } else {
-      setImages(files);
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImages(prev => [...prev, { file, data: reader.result }]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
@@ -176,8 +188,8 @@ function PropertyForm() {
       });
 
       // Add new images
-      images.forEach((image, index) => {
-        submitFormData.append(`images`, image);
+      images.forEach((imageObj, index) => {
+        submitFormData.append(`images`, imageObj.file);
       });
 
       // Determine and add cover image
