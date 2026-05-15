@@ -848,6 +848,38 @@ router.post('/:id/pdf', authenticate, authorize('admin', 'staff'), uploadPdf, as
   }
 });
 
+// @route   PUT /api/properties/:id/toggle-featured
+// @desc    Toggle featured status of a property
+// @access  Admin/Staff
+router.put('/:id/toggle-featured', authenticate, authorize('admin', 'staff'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if property exists
+    const checkResult = await pool.query('SELECT is_featured FROM properties WHERE id = $1', [id]);
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
+    const currentFeatured = checkResult.rows[0].is_featured;
+    const newFeatured = !currentFeatured;
+
+    // Update featured status
+    const result = await pool.query(
+      'UPDATE properties SET is_featured = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [newFeatured, id]
+    );
+
+    res.json({
+      message: `Property ${newFeatured ? 'added to' : 'removed from'} featured`,
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Toggle featured error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // @route   GET /api/properties/:id
 // @desc    Get single property by ID
 // @access  Public
@@ -890,38 +922,6 @@ router.get('/:id', async (req, res) => {
     res.json({ message: 'Property fetched successfully', data: { property } });
   } catch (error) {
     console.error('Get property error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// @route   PUT /api/properties/:id/toggle-featured
-// @desc    Toggle featured status of a property
-// @access  Admin/Staff
-router.put('/:id/toggle-featured', authenticate, authorize('admin', 'staff'), async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Check if property exists
-    const checkResult = await pool.query('SELECT is_featured FROM properties WHERE id = $1', [id]);
-    if (checkResult.rows.length === 0) {
-      return res.status(404).json({ message: 'Property not found' });
-    }
-
-    const currentFeatured = checkResult.rows[0].is_featured;
-    const newFeatured = !currentFeatured;
-
-    // Update featured status
-    const result = await pool.query(
-      'UPDATE properties SET is_featured = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-      [newFeatured, id]
-    );
-
-    res.json({
-      message: `Property ${newFeatured ? 'added to' : 'removed from'} featured`,
-      data: result.rows[0]
-    });
-  } catch (error) {
-    console.error('Toggle featured error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
