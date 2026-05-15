@@ -292,6 +292,79 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
       }
     }
 
+    // Validate numeric fields before database insert to prevent NaN/invalid values
+    const validatedReservePrice = parseFloat(reserve_price);
+    if (isNaN(validatedReservePrice) || validatedReservePrice < 0) {
+      return res.status(400).json({ 
+        message: 'Invalid reserve price. Must be a valid positive number.' 
+      });
+    }
+
+    // Validate optional numeric fields
+    const validatedAreaSqft = area_sqft ? parseFloat(area_sqft) : null;
+    if (area_sqft && (isNaN(validatedAreaSqft) || validatedAreaSqft < 0)) {
+      return res.status(400).json({ 
+        message: 'Invalid area. Must be a valid positive number.' 
+      });
+    }
+
+    const validatedBedrooms = bedrooms ? parseInt(bedrooms) : null;
+    if (bedrooms && (isNaN(validatedBedrooms) || validatedBedrooms < 0)) {
+      return res.status(400).json({ 
+        message: 'Invalid bedrooms. Must be a valid non-negative number.' 
+      });
+    }
+
+    const validatedBathrooms = bathrooms ? parseInt(bathrooms) : null;
+    if (bathrooms && (isNaN(validatedBathrooms) || validatedBathrooms < 0)) {
+      return res.status(400).json({ 
+        message: 'Invalid bathrooms. Must be a valid non-negative number.' 
+      });
+    }
+
+    const validatedFloors = floors ? parseInt(floors) : null;
+    if (floors && (isNaN(validatedFloors) || validatedFloors < 0)) {
+      return res.status(400).json({ 
+        message: 'Invalid floors. Must be a valid non-negative number.' 
+      });
+    }
+
+    const validatedEstimatedMarketValue = estimated_market_value ? parseFloat(estimated_market_value) : null;
+    if (estimated_market_value && (isNaN(validatedEstimatedMarketValue) || validatedEstimatedMarketValue < 0)) {
+      return res.status(400).json({ 
+        message: 'Invalid estimated market value. Must be a valid positive number.' 
+      });
+    }
+
+    const validatedBuiltUpArea = built_up_area ? parseFloat(built_up_area) : null;
+    if (built_up_area && (isNaN(validatedBuiltUpArea) || validatedBuiltUpArea < 0)) {
+      return res.status(400).json({ 
+        message: 'Invalid built-up area. Must be a valid positive number.' 
+      });
+    }
+
+    const validatedTotalArea = total_area ? parseFloat(total_area) : null;
+    if (total_area && (isNaN(validatedTotalArea) || validatedTotalArea < 0)) {
+      return res.status(400).json({ 
+        message: 'Invalid total area. Must be a valid positive number.' 
+      });
+    }
+
+    const validatedEmd = emd ? parseFloat(emd) : null;
+    if (emd && (isNaN(validatedEmd) || validatedEmd < 0)) {
+      return res.status(400).json({ 
+        message: 'Invalid EMD. Must be a valid positive number.' 
+      });
+    }
+
+    // Validate auction date
+    const auctionDate = new Date(auction_date);
+    if (isNaN(auctionDate.getTime())) {
+      return res.status(400).json({ 
+        message: 'Invalid auction date. Must be a valid ISO8601 date.' 
+      });
+    }
+
     // Wrap entire operation in retry logic for transient DB errors
     const property = await executeWithRetry(async () => {
       // Determine cover image - store as reference, not full base64 data
@@ -311,10 +384,9 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
 
       // Determine status based on auction_date
       const now = new Date();
-      const auctionDate = new Date(auction_date);
       const propertyStatus = auctionDate <= now ? 'active' : 'upcoming';
 
-      // Create property with retry
+      // Create property with retry - use pre-validated numeric values
       const propertyResult = await queryWithRetry(
         `INSERT INTO properties (
           title, description, property_type, address, city, state, zip_code, country,
@@ -327,14 +399,14 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
         [
           title, description || null, property_type || null, address, city,
           state || null, zip_code || null, country || 'India',
-          area_sqft ? parseFloat(area_sqft) : null, req.body.area_unit || 'sq ft',
-          bedrooms ? parseInt(bedrooms) : null, bathrooms ? parseInt(bathrooms) : null,
-          floors ? parseInt(floors) : null,
-          parseFloat(reserve_price), new Date(auction_date), auction_time || null, coverImageUrl, req.user.id,
-          estimated_market_value ? parseFloat(estimated_market_value) : null,
-          built_up_area ? parseFloat(built_up_area) : null, req.body.built_up_area_unit || 'sq ft',
-          total_area ? parseFloat(total_area) : null, req.body.total_area_unit || 'sq ft',
-          emd ? parseFloat(emd) : null,
+          validatedAreaSqft, req.body.area_unit || 'sq ft',
+          validatedBedrooms, validatedBathrooms,
+          validatedFloors,
+          validatedReservePrice, auctionDate, auction_time || null, coverImageUrl, req.user.id,
+          validatedEstimatedMarketValue,
+          validatedBuiltUpArea, req.body.built_up_area_unit || 'sq ft',
+          validatedTotalArea, req.body.total_area_unit || 'sq ft',
+          validatedEmd,
           possession_type || null,
           application_end_date ? new Date(application_end_date) : null,
           map_embed_code || null,
@@ -345,56 +417,46 @@ router.post('/', authenticate, authorize('admin', 'staff'), uploadImages, [
 
       const property = propertyResult.rows[0];
 
-      // Save images with parallel processing (faster than sequential)
+      // Save images sequentially to avoid connection pool exhaustion and statement timeouts
+      let savedImageCount = 0;
       if (uploadedImages && Array.isArray(uploadedImages) && uploadedImages.length > 0) {
-        try {
-          // Process images in batches to avoid overwhelming the connection pool
-          const batchSize = 5; // Process 5 images at a time
-          const imageBatches = [];
+        console.log(`📷 Starting to save ${uploadedImages.length} images for property ${property.id}`);
+        
+        for (let imageIndex = 0; imageIndex < uploadedImages.length; imageIndex++) {
+          const file = uploadedImages[imageIndex];
           
-          for (let i = 0; i < uploadedImages.length; i += batchSize) {
-            const batch = uploadedImages.slice(i, i + batchSize).map(async (file, idx) => {
-              const imageIndex = i + idx;
-              
-              try {
-                // File buffer is already from multer, no base64 conversion needed
-                await queryWithRetry(
-                  'INSERT INTO property_images (property_id, image_data, image_mime_type, image_url, image_order, is_cover) VALUES ($1, $2, $3, $4, $5, $6)',
-                  [
-                    property.id, 
-                    file.buffer, // Use buffer directly from multer
-                    file.mimetype, // Use mimetype from multer
-                    file.originalname,
-                    imageIndex,
-                    imageIndex === coverImageIndex ? true : false // Mark cover image
-                  ],
-                  3 // Retry up to 3 times per image
-                );
-                console.log(`✅ Image ${imageIndex + 1}/${uploadedImages.length} saved`);
-              } catch (err) {
-                console.error(`❌ Failed to save image ${imageIndex + 1}:`, err.message);
-                throw err;
-              }
-            });
-            
-            imageBatches.push(...batch);
+          try {
+            // File buffer is already from multer, no base64 conversion needed
+            await queryWithRetry(
+              'INSERT INTO property_images (property_id, image_data, image_mime_type, image_url, image_order, is_cover) VALUES ($1, $2, $3, $4, $5, $6)',
+              [
+                property.id, 
+                file.buffer, // Use buffer directly from multer
+                file.mimetype, // Use mimetype from multer
+                file.originalname,
+                imageIndex,
+                imageIndex === coverImageIndex ? true : false // Mark cover image
+              ],
+              3 // Retry up to 3 times per image
+            );
+            savedImageCount++;
+            console.log(`✅ Image ${imageIndex + 1}/${uploadedImages.length} saved`);
+          } catch (err) {
+            console.error(`❌ Failed to save image ${imageIndex + 1}/${uploadedImages.length}: ${err.message}`);
+            // Delete the property if we can't save images - rollback
+            await queryWithRetry('DELETE FROM properties WHERE id = $1', [property.id], 2).catch(() => {});
+            throw new Error(`Failed to save image ${imageIndex + 1} of ${uploadedImages.length}: ${err.message}`);
           }
-          
-          // Wait for all image insertions to complete
-          await Promise.all(imageBatches);
-          console.log(`✅ All ${uploadedImages.length} images saved successfully`);
-
-          // Update property with cover image marker
-          await queryWithRetry(
-            'UPDATE properties SET cover_image_url = $1 WHERE id = $2',
-            ['data:image/stored', property.id],
-            2
-          );
-        } catch (imageError) {
-          console.error('Error processing images, but property created:', imageError.message);
-          // Property was created, but images failed - return property anyway
-          // Frontend will handle missing images gracefully
         }
+        
+        console.log(`✅ All ${savedImageCount} images saved successfully`);
+
+        // Update property with cover image marker
+        await queryWithRetry(
+          'UPDATE properties SET cover_image_url = $1 WHERE id = $2',
+          ['data:image/stored', property.id],
+          2
+        );
       }
 
       // Fetch complete property with images for response
