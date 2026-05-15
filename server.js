@@ -81,16 +81,17 @@ app.use((req, res, next) => {
   // Check if origin is allowed
   const isAllowed = !origin || 
     allowedOrigins.includes(origin) || 
-    origin.endsWith('.netlify.app') ||
-    origin.includes('localhost') || 
-    origin.includes('127.0.0.1');
+    (origin && origin.endsWith('.netlify.app')) ||
+    (origin && origin.includes('localhost')) || 
+    (origin && origin.includes('127.0.0.1'));
   
-  if (isAllowed) {
-    res.header('Access-Control-Allow-Origin', origin || '*');
+  if (isAllowed && origin) {
+    res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
     res.header('Access-Control-Expose-Headers', 'Content-Range, X-Content-Range');
+    res.header('Access-Control-Max-Age', '3600');
   }
   
   // Handle preflight requests
