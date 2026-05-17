@@ -154,27 +154,59 @@ async function executeSqlFile(filePath, isSchema = false) {
     }
     
     const sql = fs.readFileSync(filePath, 'utf-8');
-    const statements = sql
-      .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
     
-    for (const statement of statements) {
+    if (isSchema) {
+      // For schema files, execute as a single transaction for consistency
+      // This handles interdependent statements better
       try {
-        await pool.query(statement);
+        await pool.query(sql);
+        console.log(`✅ Schema file executed successfully`);
       } catch (err) {
-        // For schema files, ignore "already exists" errors (idempotent)
-        if (isSchema && (err.message.includes('already exists') || err.message.includes('duplicate key'))) {
-          continue;
+        // If it's a fresh database, the DROP statements will pass but CREATE might have issues
+        // Try to recover by executing statement by statement with better error handling
+        console.log(`ℹ️  Full transaction failed, attempting statement-by-statement execution...`);
+        
+        const statements = sql
+          .split(';')
+          .map(stmt => stmt.trim())
+          .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+        
+        let successCount = 0;
+        for (const statement of statements) {
+          try {
+            await pool.query(statement);
+            successCount++;
+          } catch (execErr) {
+            // Log but continue for schema files
+            if (!(execErr.message.includes('already exists') || 
+                  execErr.message.includes('duplicate key') ||
+                  execErr.message.includes('does not exist'))) {
+              console.warn(`⚠️  Statement error: ${execErr.message.split('\n')[0]}`);
+            }
+          }
         }
-        if (!isSchema && (err.message.includes('duplicate key') || err.message.includes('already exists'))) {
-          continue;
+        console.log(`✅ Completed ${successCount}/${statements.length} statements`);
+      }
+    } else {
+      // For seed files, execute statement by statement
+      const statements = sql
+        .split(';')
+        .map(stmt => stmt.trim())
+        .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+      
+      for (const statement of statements) {
+        try {
+          await pool.query(statement);
+        } catch (err) {
+          if (!(err.message.includes('duplicate key') || err.message.includes('already exists'))) {
+            throw err;
+          }
         }
-        throw err;
       }
     }
   } catch (error) {
     console.error(`⚠️  Error executing SQL file ${filePath}:`, error.message);
+    throw error;
   }
 }
 
@@ -199,8 +231,18 @@ async function initializeDatabase() {
       if (!tableCheck.rows[0].exists) {
         console.log('📝 Creating database schema from clean-db.sql...');
         // Use clean-db.sql which has comprehensive schema with proper constraints
+        // This will throw if it fails, which we'll catch
         await executeSqlFile(path.join(__dirname, 'clean-db.sql'), true);
         console.log('✅ Schema created successfully');
+        
+        // Verify the users table was actually created
+        const verifyTable = await pool.query(
+          "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'users')"
+        );
+        
+        if (!verifyTable.rows[0].exists) {
+          throw new Error('Users table creation failed - schema execution did not complete properly');
+        }
       } else {
         console.log('✅ Database tables already exist');
       }
@@ -232,6 +274,7 @@ async function initializeDatabase() {
         await new Promise(resolve => setTimeout(resolve, 2000));
       } else {
         console.error('⚠️  Max retries reached. Server will start with limited functionality.');
+        // Don't throw - let the server continue
       }
     }
   }
