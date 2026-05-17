@@ -89,9 +89,13 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/user-registrations', userRegistrationRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Health check
+// Health check - simple and always available
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // Error handling middleware

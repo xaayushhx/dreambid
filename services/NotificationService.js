@@ -3,21 +3,39 @@ import pool from '../config/database.js';
 
 /**
  * Initialize Firebase Admin SDK
- * Make sure FIREBASE_SERVICE_ACCOUNT is set in environment variables
- * It should be the path to your Firebase service account JSON file
+ * Make sure FIREBASE_SERVICE_ACCOUNT_JSON is set in environment variables
+ * It should be the Firebase service account JSON as a string
  */
 export const initializeFirebase = () => {
   if (!admin.apps.length) {
     try {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '{}');
+      const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+      
+      // Skip Firebase if no credentials provided
+      if (!serviceAccountJson) {
+        console.warn('⚠️  Firebase credentials not found. Push notifications disabled.');
+        return false;
+      }
+      
+      const serviceAccount = JSON.parse(serviceAccountJson);
+      
+      // Validate service account has required fields
+      if (!serviceAccount.project_id || !serviceAccount.private_key || !serviceAccount.client_email) {
+        console.warn('⚠️  Firebase service account is incomplete. Push notifications disabled.');
+        return false;
+      }
+      
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
-      console.log('Firebase Admin SDK initialized successfully');
+      console.log('✓ Firebase initialized for push notifications');
+      return true;
     } catch (error) {
-      console.error('Failed to initialize Firebase Admin SDK:', error);
+      console.warn('⚠️  Firebase initialization failed - push notifications disabled:', error.message);
+      return false;
     }
   }
+  return true;
 };
 
 /**

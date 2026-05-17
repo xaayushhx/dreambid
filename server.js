@@ -145,6 +145,39 @@ async function runMigrations() {
   }
 }
 
+// Helper to read SQL file safely - executes schema/seed files
+async function executeSqlFile(filePath, isSchema = false) {
+  try {
+    if (!fs.existsSync(filePath)) {
+      console.log(`ℹ️  No SQL file found at ${filePath}`);
+      return;
+    }
+    
+    const sql = fs.readFileSync(filePath, 'utf-8');
+    const statements = sql
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+    
+    for (const statement of statements) {
+      try {
+        await pool.query(statement);
+      } catch (err) {
+        // For schema files, ignore "already exists" errors (idempotent)
+        if (isSchema && (err.message.includes('already exists') || err.message.includes('duplicate key'))) {
+          continue;
+        }
+        if (!isSchema && (err.message.includes('duplicate key') || err.message.includes('already exists'))) {
+          continue;
+        }
+        throw err;
+      }
+    }
+  } catch (error) {
+    console.error(`⚠️  Error executing SQL file ${filePath}:`, error.message);
+  }
+}
+
 // Initialize database on startup
 async function initializeDatabase() {
   let retries = 0;
@@ -154,133 +187,39 @@ async function initializeDatabase() {
     try {
       console.log('🔄 Checking/initializing database...');
       
+      // Test connection first
+      await pool.query('SELECT 1');
+      console.log('✅ Database connection established');
+      
       // Check if users table exists
       const tableCheck = await pool.query(
         "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'users')"
       );
       
       if (!tableCheck.rows[0].exists) {
-        console.log('📝 Creating database tables...');
-        
-        // Read and execute schema - handle it as a single transaction
-        const schemaSql = fs.readFileSync(path.join(__dirname, 'setup-database.sql'), 'utf-8');
-        const schemaStatements = schemaSql
-          .split(';')
-          .map(stmt => stmt.trim())
-          .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-        
-        for (const statement of schemaStatements) {
-          try {
-            await pool.query(statement);
-          } catch (err) {
-            if (!err.message.includes('already exists') && !err.message.includes('duplicate key')) {
-              throw err;
-            }
-          }
-        }
-        console.log('✅ Schema created');
-        
-        // Read and execute seed data
-        console.log('📝 Seeding database with sample properties...');
-        const seedSql = fs.readFileSync(path.join(__dirname, 'seed-properties.sql'), 'utf-8');
-        const seedStatements = seedSql
-          .split(';')
-          .map(stmt => stmt.trim())
-          .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-        
-        let seedSuccess = 0;
-        let seedSkipped = 0;
-        
-        for (const statement of seedStatements) {
-          try {
-            await pool.query(statement);
-            seedSuccess++;
-          } catch (err) {
-            // Ignore duplicate key errors (already seeded)
-            if (err.message.includes('duplicate key') || err.message.includes('already exists')) {
-              seedSkipped++;
-            } else {
-              console.warn('⚠️  Seed warning:', err.message.split('\n')[0]);
-            }
-          }
-        }
-        console.log(`✅ Seed data completed: ${seedSuccess} inserted, ${seedSkipped} skipped`);
+        console.log('📝 Creating database schema from clean-db.sql...');
+        // Use clean-db.sql which has comprehensive schema with proper constraints
+        await executeSqlFile(path.join(__dirname, 'clean-db.sql'), true);
+        console.log('✅ Schema created successfully');
       } else {
         console.log('✅ Database tables already exist');
-        
-        // Check if properties exist and seed if empty
-        const propertiesCheck = await pool.query('SELECT COUNT(*) FROM properties');
-        const propertyCount = parseInt(propertiesCheck.rows[0].count);
-        
-        if (propertyCount === 0) {
-          console.log('📝 No properties found. Seeding database...');
-          const seedSql = fs.readFileSync(path.join(__dirname, 'seed-properties.sql'), 'utf-8');
-          const seedStatements = seedSql
-            .split(';')
-            .map(stmt => stmt.trim())
-            .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-          
-          let seedSuccess = 0;
-          let seedSkipped = 0;
-          
-          for (const statement of seedStatements) {
-            try {
-              await pool.query(statement);
-              seedSuccess++;
-            } catch (err) {
-              if (err.message.includes('duplicate key') || err.message.includes('already exists')) {
-                seedSkipped++;
-              } else {
-                console.warn('⚠️  Seed warning:', err.message.split('\n')[0]);
-              }
-            }
-          }
-          console.log(`✅ Seed data completed: ${seedSuccess} inserted, ${seedSkipped} skipped`);
-        } else {
-          console.log(`✅ Database has ${propertyCount} properties`);
-        }
-        
-        // Check if user_activity table exists and create if missing
-        const userActivityCheck = await pool.query(
-          "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_activity')"
-        );
-        
-        if (!userActivityCheck.rows[0].exists) {
-          console.log('📝 Creating user_activity table (missing from existing database)...');
-          
-          await pool.query(`
-            CREATE TABLE user_activity (
-              id SERIAL PRIMARY KEY,
-              user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-              action VARCHAR(100) NOT NULL,
-              action_category VARCHAR(50),
-              data JSONB DEFAULT NULL,
-              ip_address VARCHAR(45),
-              user_agent TEXT,
-              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            
-            CREATE INDEX idx_user_activity_user_id ON user_activity(user_id);
-            CREATE INDEX idx_user_activity_created_at ON user_activity(created_at);
-            CREATE INDEX idx_user_activity_action ON user_activity(action);
-            CREATE INDEX idx_user_activity_user_date ON user_activity(user_id, created_at DESC);
-          `);
-          console.log('✅ user_activity table created');
-        }
       }
       
-      // Ensure admin user exists with correct hashed password
-      try {
-        // Bcrypt hash for password 'admin123'
-        const adminPasswordHash = '$2a$10$.BuPpcfY36q7Uypbus.9/eCszDXNNj0nPgAn9qHVrITIkN9qX3H5a';
+      // Verify admin user exists
+      const adminCheck = await pool.query(
+        "SELECT id FROM users WHERE email = 'admin@dreambid.com' LIMIT 1"
+      );
+      
+      if (adminCheck.rows.length === 0) {
+        console.log('📝 Creating admin user...');
+        const adminPasswordHash = '$2a$10$53Do2hAKDxUAGWI8JDWAbu8B4gRgIJR0xM1MGXeyWgJiRYyF4QJlS'; // admin123456
         await pool.query(
-          `INSERT INTO users (email, password_hash, full_name, role, is_active)
-           VALUES ('admin@dreambid.com', $1, 'Admin User', 'admin', true)
-           ON CONFLICT (email) DO UPDATE SET password_hash = $1`
+          `INSERT INTO users (email, password_hash, full_name, phone, role, is_active)
+           VALUES ('admin@dreambid.com', $1, 'Admin User', '5551234567', 'admin', true)`
         , [adminPasswordHash]);
-        console.log('✅ Admin user verified');
-      } catch (err) {
-        console.log('ℹ️  Admin user setup:', err.message.split('\n')[0]);
+        console.log('✅ Admin user created');
+      } else {
+        console.log('✅ Admin user already exists');
       }
       
       return; // Success - exit function
@@ -292,7 +231,7 @@ async function initializeDatabase() {
         console.log(`⏳ Retrying in 2 seconds...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
       } else {
-        console.error('⚠️  Max retries reached. Continuing with startup...');
+        console.error('⚠️  Max retries reached. Server will start with limited functionality.');
       }
     }
   }
@@ -307,12 +246,11 @@ await runMigrations();
 // Initialize cleanup service (scheduled jobs)
 CleanupService.initSchedules();
 
-// Initialize Firebase for notifications
+// Initialize Firebase for notifications (non-blocking)
 try {
   initializeFirebase();
-  console.log('✓ Firebase initialized for push notifications');
 } catch (error) {
-  console.warn('⚠️  Firebase initialization failed - push notifications disabled:', error.message);
+  console.warn('⚠️  Firebase initialization skipped:', error.message);
 }
 
 // API Routes
@@ -326,9 +264,13 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/user-registrations', userRegistrationRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Health check
+// Health check - simple and always available
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // Serve static files in production
