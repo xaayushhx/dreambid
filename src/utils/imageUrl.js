@@ -17,7 +17,13 @@ export const getImageUrl = (imagePath) => {
   
 
   // Get API base URL (remove /api suffix if present)
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  let apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  
+  // Ensure URL has proper protocol
+  if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
+    apiUrl = `https://${apiUrl}`;
+  }
+  
   const baseUrl = apiUrl.replace('/api', '');
   
   // Ensure image path starts with /
