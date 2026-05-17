@@ -99,27 +99,57 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Run migrations
 async function runMigrations() {
   try {
-    const migrationPath = path.join(__dirname, 'migrations_add_property_fields.sql');
+    const migrationsDir = path.join(__dirname, 'migrations');
     
-    // Check if migration file exists
-    if (!fs.existsSync(migrationPath)) {
-      console.log('ℹ️  No pending migrations');
+    // Check if migrations directory exists
+    if (!fs.existsSync(migrationsDir)) {
+      console.log('ℹ️  No migrations directory found');
       return;
     }
     
-    console.log('🔄 Running migrations...');
-    const migrationSql = fs.readFileSync(migrationPath, 'utf-8');
+    // Get all migration files sorted by filename
+    const files = fs.readdirSync(migrationsDir)
+      .filter(file => file.endsWith('.js'))
+      .sort();
     
-    // Execute entire migration as one transaction for idempotency
-    try {
-      await pool.query(migrationSql);
-      console.log('✅ Migrations completed successfully');
-    } catch (err) {
-      // Log but don't fail - migrations are idempotent
-      console.log('ℹ️  Migration notice:', err.message.split('\n')[0]);
+    if (files.length === 0) {
+      console.log('ℹ️  No migration files found');
+      return;
     }
+    
+    console.log(`🔄 Running ${files.length} migration(s)...`);
+    
+    for (const file of files) {
+      try {
+        const filePath = path.join(migrationsDir, file);
+        
+        // Import the migration module dynamically
+        const migration = await import(`file://${filePath}`);
+        
+        // Execute the up function if it exists
+        if (migration.up && typeof migration.up === 'function') {
+          console.log(`  ⏳ ${file}...`);
+          await migration.up(pool);
+          console.log(`  ✅ ${file} completed`);
+        }
+      } catch (err) {
+        // Log but don't fail - migrations should be idempotent
+        const errorMsg = err.message.split('\n')[0];
+        
+        // Check if it's an idempotent error (column already exists, etc)
+        if (errorMsg.includes('already exists') || 
+            errorMsg.includes('duplicate') ||
+            errorMsg.includes('is_cover')) {
+          console.log(`  ℹ️  ${file} (already applied)`);
+        } else {
+          console.warn(`  ⚠️  ${file}: ${errorMsg}`);
+        }
+      }
+    }
+    
+    console.log('✅ Migrations completed');
   } catch (error) {
-    console.error('⚠️  Migration error:', error.message);
+    console.error('⚠️  Migration runner error:', error.message);
     // Don't fail startup on migration errors
   }
 }
@@ -260,10 +290,16 @@ async function initializeDatabase() {
 }
 
 // Initialize database before starting server
-await initializeDatabase();
+// Run asynchronously so server starts even if DB init fails
+initializeDatabase().catch(error => {
+  console.error('❌ Database initialization failed:', error.message);
+  console.error('⚠️  Server running without database access');
+});
 
-// Run migrations after database initialization
-await runMigrations();
+// Run migrations after database initialization  
+runMigrations().catch(error => {
+  console.error('⚠️  Migration error:', error.message);
+});
 
 // Initialize cleanup service (scheduled jobs)
 CleanupService.initSchedules();
@@ -275,6 +311,15 @@ try {
   console.warn('⚠️  Firebase initialization skipped:', error.message);
 }
 
+// Health check - simple and always available (BEFORE routes)
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
@@ -285,15 +330,6 @@ app.use('/api/interests', interestRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/user-registrations', userRegistrationRoutes);
 app.use('/api/notifications', notificationRoutes);
-
-// Health check - simple and always available
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
@@ -321,6 +357,7 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 DreamBid Unified Server running on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check available at http://localhost:${PORT}/api/health`);
 });
 
 export default app;

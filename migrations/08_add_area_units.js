@@ -8,9 +8,9 @@
 
 import pool from '../config/database.js';
 
-const migrate = async () => {
+export const up = async () => {
   try {
-    console.log('🔄 Starting migration: Adding area unit columns and image cover support...');
+    console.log('🔄 Starting migration: Adding area unit columns...');
 
     // Check if area_unit column already exists
     const checkAreaUnit = await pool.query(`
@@ -26,6 +26,8 @@ const migrate = async () => {
         ADD COLUMN area_unit VARCHAR(50) DEFAULT 'sq ft'
       `);
       console.log('✅ Added area_unit column');
+    } else {
+      console.log('ℹ️  area_unit column already exists');
     }
 
     // Check if built_up_area_unit column already exists
@@ -42,6 +44,8 @@ const migrate = async () => {
         ADD COLUMN built_up_area_unit VARCHAR(50) DEFAULT 'sq ft'
       `);
       console.log('✅ Added built_up_area_unit column');
+    } else {
+      console.log('ℹ️  built_up_area_unit column already exists');
     }
 
     // Check if total_area_unit column already exists
@@ -58,31 +62,31 @@ const migrate = async () => {
         ADD COLUMN total_area_unit VARCHAR(50) DEFAULT 'sq ft'
       `);
       console.log('✅ Added total_area_unit column');
-    }
-
-    // Check if is_cover column already exists in property_images table
-    const checkIsCover = await pool.query(`
-      SELECT EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name='property_images' AND column_name='is_cover'
-      )
-    `);
-
-    if (!checkIsCover.rows[0].exists) {
-      await pool.query(`
-        ALTER TABLE property_images 
-        ADD COLUMN is_cover BOOLEAN DEFAULT false
-      `);
-      console.log('✅ Added is_cover column to property_images table');
+    } else {
+      console.log('ℹ️  total_area_unit column already exists');
     }
 
     console.log('✅ Migration completed successfully');
-    process.exit(0);
   } catch (error) {
-    console.error('❌ Migration failed:', error.message);
-    process.exit(1);
+    if (error.message.includes('already exists')) {
+      console.log('ℹ️  Migration notice: Columns already exist');
+    } else {
+      console.error('Migration error:', error.message);
+    }
   }
 };
 
-// Run migration
-migrate();
+export const down = async () => {
+  try {
+    // Rollback: Remove the area unit columns
+    await pool.query(`
+      ALTER TABLE properties 
+      DROP COLUMN IF EXISTS area_unit,
+      DROP COLUMN IF EXISTS built_up_area_unit,
+      DROP COLUMN IF EXISTS total_area_unit
+    `);
+    console.log('✓ Migration rolled back: area_unit columns removed');
+  } catch (error) {
+    console.error('Migration rollback error:', error.message);
+  }
+};

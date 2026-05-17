@@ -15,17 +15,24 @@ try {
   __dirname = process.cwd();
 }
 
-// Load environment variables - check for .env.local first (development), then .env (production)
-const envPath = process.env.NODE_ENV === 'development' 
-  ? path.join(__dirname, '.env.local')
-  : path.join(__dirname, '.env');
-
-// Only try to load .env files if not in production or if the file exists
+// Load environment variables from root directory
+// In production (Railway), .env won't exist but env vars are set via Railway dashboard
+// In development, load from .env.local or .env
 if (process.env.NODE_ENV !== 'production') {
   try {
+    // Try .env.local first (development overrides)
+    const localEnvPath = path.join(process.cwd(), '.env.local');
+    dotenv.config({ path: localEnvPath });
+  } catch (e) {
+    // Silently fail
+  }
+  
+  try {
+    // Then try .env (fallback)
+    const envPath = path.join(process.cwd(), '.env');
     dotenv.config({ path: envPath });
   } catch (e) {
-    // Silently fail if .env file doesn't exist in serverless environment
+    // Silently fail if .env file doesn't exist
   }
 }
 
@@ -34,6 +41,10 @@ let dbConfig;
 
 // Use DATABASE_URL if available (Railway/Render), otherwise use NETLIFY_DATABASE_URL, otherwise use individual env vars
 const databaseUrl = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
+
+if (!databaseUrl) {
+  console.warn('⚠️  DATABASE_URL not set. Attempting individual DB env vars.');
+}
 
 if (databaseUrl) {
   dbConfig = {

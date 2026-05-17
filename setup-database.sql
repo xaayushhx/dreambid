@@ -61,8 +61,11 @@ CREATE TABLE properties (
   
   -- Area measurements
   area_sqft DECIMAL(10, 2),
+  area_unit VARCHAR(50) DEFAULT 'sq ft',
   built_up_area DECIMAL(10, 2),
+  built_up_area_unit VARCHAR(50) DEFAULT 'sq ft',
   total_area DECIMAL(10, 2),
+  total_area_unit VARCHAR(50) DEFAULT 'sq ft',
   
   -- Building features
   bedrooms INTEGER,

@@ -1,6 +1,6 @@
 import pool from '../config/database.js';
 
-export async function createBlogsTable() {
+export const up = async () => {
   try {
     // Check if table exists
     const tableExists = await pool.query(
@@ -41,8 +41,21 @@ export async function createBlogsTable() {
     await pool.query('CREATE INDEX idx_blogs_created_at ON blogs(created_at DESC)');
     await pool.query('CREATE INDEX idx_blogs_created_by ON blogs(created_by)');
 
-    console.log('✓ Blogs table created successfully');
+    console.log('✓ Migration: Blogs table created successfully');
   } catch (error) {
-    console.error('Error creating blogs table:', error.message);
+    if (error.message.includes('already exists')) {
+      console.log('ℹ️  Migration notice: Blogs table already exists');
+    } else {
+      console.error('Migration error:', error.message);
+    }
   }
-}
+};
+
+export const down = async () => {
+  try {
+    await pool.query('DROP TABLE IF EXISTS blogs CASCADE');
+    console.log('✓ Migration rolled back: Blogs table removed');
+  } catch (error) {
+    console.error('Migration rollback error:', error.message);
+  }
+};
