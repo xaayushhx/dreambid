@@ -80,10 +80,20 @@ function Register() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Special handling for contact number - only digits, max 10
+    if (name === 'contactNumber') {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prev => ({
+        ...prev,
+        [name]: digitsOnly
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -249,6 +259,9 @@ function Register() {
                 <div>
                   <label htmlFor="contactNumber" className="block text-sm font-medium text-text-primary mb-2">
                     Contact Number <span className="text-red-400">*</span>
+                    <span className={`ml-2 text-xs ${formData.contactNumber.length === 10 ? 'text-green-400' : 'text-gray-400'}`}>
+                      ({formData.contactNumber.length}/10)
+                    </span>
                   </label>
                   <input
                     type="tel"
@@ -256,8 +269,11 @@ function Register() {
                     name="contactNumber"
                     value={formData.contactNumber}
                     onChange={handleInputChange}
+                    inputMode="numeric"
+                    maxLength="10"
                     className={`w-full px-4 py-3 text-sm bg-midnight-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold transition-all duration-200 ${
-                      errors.contactNumber ? 'border-red-500 bg-red-900/20' : 'border-midnight-600'
+                      errors.contactNumber ? 'border-red-500 bg-red-900/20' : 
+                      formData.contactNumber.length === 10 ? 'border-green-500' : 'border-midnight-600'
                     }`}
                     placeholder="Enter your 10-digit mobile number"
                   />

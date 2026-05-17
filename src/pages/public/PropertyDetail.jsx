@@ -921,14 +921,15 @@ function PropertyDetail() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Contact Number *</label>
+                  <label className="block text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Contact Number * <span className={enquiryForm.phone.length === 10 ? 'text-green-400' : 'text-gray-400'}>{`(${enquiryForm.phone.length}/10)`}</span></label>
                   <input
                     type="tel"
                     required
+                    inputMode="numeric"
                     maxLength="10"
                     value={enquiryForm.phone}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
                       setEnquiryForm({ ...enquiryForm, phone: value });
                       if (value && !value.match(/^\d{10}$/)) {
                         setPhoneError(`Phone must be 10 digits (${value.length} entered)`);
@@ -939,6 +940,8 @@ function PropertyDetail() {
                     className={`w-full px-4 py-2.5 bg-gray-800 text-white rounded-xl border focus:outline-none focus:ring-1 transition ${
                       phoneError 
                         ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                        : enquiryForm.phone.length === 10
+                        ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
                         : 'border-gray-700 focus:border-[#dc2626] focus:ring-[#dc2626]'
                     } text-sm`}
                     placeholder="Enter 10-digit phone number"

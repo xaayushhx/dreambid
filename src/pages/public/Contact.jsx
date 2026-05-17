@@ -19,7 +19,14 @@ function Contact() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Special handling for contact number - only digits, max 10
+    if (name === 'contactNumber') {
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, [name]: digitsOnly }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleFileChange = (e) => {
@@ -196,6 +203,9 @@ function Contact() {
                 <div>
                   <label htmlFor="contactNumber" className="block text-sm font-semibold text-text-primary mb-2">
                     Contact Number *
+                    <span className={`ml-2 text-xs ${formData.contactNumber.length === 10 ? 'text-green-400' : 'text-gray-400'}`}>
+                      ({formData.contactNumber.length}/10)
+                    </span>
                   </label>
                   <input
                     type="tel"
@@ -204,9 +214,12 @@ function Contact() {
                     value={formData.contactNumber}
                     onChange={handleChange}
                     required
+                    inputMode="numeric"
+                    maxLength="10"
                     placeholder="Enter 10-digit mobile number"
-                    pattern="\d{10}"
-                    className="w-full px-4 py-3 bg-midnight-800 border border-midnight-700 text-text-primary placeholder-text-muted rounded-input focus:ring-2 focus:ring-gold focus:border-transparent outline-none transition"
+                    className={`w-full px-4 py-3 bg-midnight-800 border text-text-primary placeholder-text-muted rounded-input focus:ring-2 focus:ring-gold focus:border-transparent outline-none transition ${
+                      formData.contactNumber.length === 10 ? 'border-green-500' : 'border-midnight-700'
+                    }`}
                   />
                 </div>
 
