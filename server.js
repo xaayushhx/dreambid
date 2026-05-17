@@ -36,7 +36,6 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:5000',
-  // Allow all Netlify preview deploys (*.netlify.app)
 ];
 
 const corsOptions = {
@@ -51,7 +50,7 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // Allow all *.netlify.app domains (for Netlify preview deploys)
+    // Allow all *.netlify.app domains
     if (origin.endsWith('.netlify.app')) {
       return callback(null, true);
     }
@@ -66,40 +65,20 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
 
-// Middleware
-app.use(helmet());
+// Middleware - order matters!
+// CORS must come before routes but after helmet for proper preflight handling
+app.use(helmet({
+  contentSecurityPolicy: false, // Allow external resources
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(cors(corsOptions));
 
-// Additional CORS headers middleware
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Check if origin is allowed
-  const isAllowed = !origin || 
-    allowedOrigins.includes(origin) || 
-    (origin && origin.endsWith('.netlify.app')) ||
-    (origin && origin.includes('localhost')) || 
-    (origin && origin.includes('127.0.0.1'));
-  
-  if (isAllowed && origin) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-    res.header('Access-Control-Expose-Headers', 'Content-Range, X-Content-Range');
-    res.header('Access-Control-Max-Age', '3600');
-  }
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// Explicit OPTIONS handler for all routes (catch-all preflight)
+app.options('*', cors(corsOptions));
 
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
