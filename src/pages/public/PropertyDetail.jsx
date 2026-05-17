@@ -958,7 +958,8 @@ function PropertyDetail() {
                     placeholder="Enter email address (optional)"
                   />
                 </div>
-                <div>
+                {/* KYC Document Upload - Hidden for now */}
+                {/* <div>
                   <label className="block text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">KYC Document</label>
                   <div
                     onDrop={handleFileDrop}
@@ -990,7 +991,7 @@ function PropertyDetail() {
                       </div>
                     )}
                   </div>
-                </div>
+                </div> */}
                 <div>
                   <label className="block text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Message</label>
                   <textarea
