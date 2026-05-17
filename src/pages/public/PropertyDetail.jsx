@@ -486,19 +486,19 @@ function PropertyDetail() {
                   {property.area && (
                     <div className="flex justify-between">
                       <span className="text-sm text-text-secondary">Area</span>
-                      <span className="text-sm font-medium text-text-primary">{formatNumber(property.area)} sq.ft.</span>
+                      <span className="text-sm font-medium text-text-primary">{formatNumber(property.area)} {property.area_unit || 'sq.ft.'}</span>
                     </div>
                   )}
                   {property.built_up_area && (
                     <div className="flex justify-between">
                       <span className="text-sm text-text-secondary">Built-Up Area</span>
-                      <span className="text-sm font-medium text-text-primary">{formatNumber(property.built_up_area)} sq.ft.</span>
+                      <span className="text-sm font-medium text-text-primary">{formatNumber(property.built_up_area)} {property.built_up_area_unit || 'sq.ft.'}</span>
                     </div>
                   )}
                   {property.total_area && (
                     <div className="flex justify-between">
                       <span className="text-sm text-text-secondary">Total Area</span>
-                      <span className="text-sm font-medium text-text-primary">{formatNumber(property.total_area)} sq.ft.</span>
+                      <span className="text-sm font-medium text-text-primary">{formatNumber(property.total_area)} {property.total_area_unit || 'sq.ft.'}</span>
                     </div>
                   )}
                   {property.city && (
@@ -888,7 +888,7 @@ function PropertyDetail() {
                                 <span className="text-text-secondary">
                                   <span className="font-medium text-text-primary">{Math.round(prop.area_sqft)}</span> {prop.area_unit || 'sq.ft.'}
                                 </span>
-                              )}
+                              )}}
                             </div>
                             <p className="text-sm font-bold text-text-primary">
                               ₹{prop.reserve_price ? prop.reserve_price.toLocaleString() : 'N/A'}

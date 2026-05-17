@@ -135,11 +135,18 @@ function Blogs() {
                       <UserIcon className="w-4 h-4" />
                       {blog.author}
                     </div>
+                    {blog.readTime && (
+                      <div className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {blog.readTime}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Read Time and Link */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gold">{blog.readTime}</span>
+                  {/* Read More Link */}
+                  <div className="flex items-center justify-end">
                     <Link
                       to={`/blogs/${blog.id}`}
                       className="inline-flex items-center gap-2 text-gold hover:text-gold-hover font-medium text-sm transition-colors group/link"

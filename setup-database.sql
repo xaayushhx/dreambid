@@ -35,7 +35,7 @@ CREATE TABLE users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   full_name VARCHAR(255) NOT NULL,
-  phone VARCHAR(20) UNIQUE,
+  phone VARCHAR(20) UNIQUE CHECK (phone IS NULL OR (phone ~ '^\d{10}$')),
   profile_photo VARCHAR(500),
   role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('admin', 'staff', 'user')),
   is_active BOOLEAN DEFAULT true,
@@ -129,7 +129,7 @@ CREATE TABLE enquiries (
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255),
-  phone VARCHAR(20) NOT NULL,
+  phone VARCHAR(20) NOT NULL CHECK (phone ~ '^\d{10}$'),
   message TEXT,
   enquiry_type VARCHAR(50) DEFAULT 'general' CHECK (enquiry_type IN ('general', 'bid', 'inspection', 'complaint')),
   status VARCHAR(50) DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'resolved', 'closed', 'not_interested', 'unable_to_connect', 'call_later')),
@@ -204,7 +204,7 @@ CREATE TABLE blog_images (
 CREATE TABLE user_registrations (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  contact_number VARCHAR(20) NOT NULL,
+  contact_number VARCHAR(20) NOT NULL CHECK (contact_number ~ '^\d{10}$'),
   requirements JSONB NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

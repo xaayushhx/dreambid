@@ -138,9 +138,9 @@ function Shortlisted() {
           {property.area && (
             <div className="flex items-center gap-1">
               <span className="text-text-primary font-medium">{Math.round(property.area)}</span>
-              <span className="text-text-secondary">sq.ft.</span>
+              <span className="text-text-secondary">{property.area_unit || 'sq.ft.'}</span>
             </div>
-          )}
+          )}}
           {property.property_type && (
             <div className="flex items-center gap-1">
               <span className="text-text-secondary">{property.property_type}</span>

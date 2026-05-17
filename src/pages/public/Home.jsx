@@ -544,7 +544,7 @@ function Home() {
                         {property.title}
                       </h3>
                       <p className="text-text-secondary text-xs md:text-sm mb-3">
-                        📍 {property.city}, {property.state} • {property.property_size || 'N/A'} sq.ft
+                        📍 {property.city}, {property.state} • {property.area_sqft || property.property_size || 'N/A'} {property.area_unit || 'sq.ft'}
                       </p>
                       <div className="space-y-2">
                         <div>
@@ -682,7 +682,7 @@ function Home() {
                           <div className="p-4 md:p-6 flex-grow flex flex-col">
                             <h3 className="text-lg md:text-xl font-bold text-white mb-2 line-clamp-2">{property.title}</h3>
                             <p className="text-text-secondary text-xs md:text-sm mb-3">
-                              📍 {property.city}, {property.state} • {property.property_size} sq.ft
+                              📍 {property.city}, {property.state} • {property.area_sqft || property.property_size || 'N/A'} {property.area_unit || 'sq.ft'}
                             </p>
                             <p className="text-lg md:text-2xl font-bold text-gold mb-4 flex-grow">₹{parseFloat(property.reserve_price).toLocaleString('en-IN')}</p>
                             <div className="flex gap-2 md:gap-3 pt-4 md:pt-6 border-t border-midnight-700">

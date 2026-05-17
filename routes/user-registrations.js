@@ -1,4 +1,5 @@
 import express from 'express';
+import { body, validationResult } from 'express-validator';
 import pool from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 import { notifyAdminsOfRegistration } from '../services/NotificationService.js';
@@ -8,19 +9,22 @@ const router = express.Router();
 // @route   POST /api/user-registrations
 // @desc    Save user property requirements registration
 // @access  Public
-router.post('/', async (req, res) => {
+router.post('/', [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('contactNumber')
+    .trim()
+    .notEmpty()
+    .withMessage('Contact number is required')
+    .matches(/^\d{10}$/)
+    .withMessage('Contact number must be exactly 10 digits')
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { name, contactNumber, requirements } = req.body;
-
-    if (!name || !contactNumber) {
-      return res.status(400).json({ message: 'Name and contact number are required' });
-    }
-
-    // Validate contact number - must be 10 digits
-    const cleanedNumber = contactNumber.replace(/\s/g, '');
-    if (!/^\d{10}$/.test(cleanedNumber)) {
-      return res.status(400).json({ message: 'Contact number must be exactly 10 digits' });
-    }
 
     // Create table if it doesn't exist
     await pool.query(`

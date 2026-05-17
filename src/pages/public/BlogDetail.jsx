@@ -224,32 +224,6 @@ function BlogDetail() {
         </div>
       </div>
 
-      {/* Share and Actions */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 py-8 border-t border-b border-midnight-700">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <span className="text-text-secondary text-sm">Share this article:</span>
-            <div className="flex gap-3">
-              <button className="text-text-secondary hover:text-gold transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2s9 5 20 5a9.5 9.5 0 00-9-5.5c4.75 2.25 7-7 7-7"></path></svg>
-              </button>
-              <button className="text-text-secondary hover:text-gold transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a6 6 0 00-6 6v3H7v4h2v8h4v-8h3l1-4h-4V8a2 2 0 012-2h3z"></path></svg>
-              </button>
-              <button className="text-text-secondary hover:text-gold transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path></svg>
-              </button>
-            </div>
-          </div>
-          <Link
-            to="/blogs"
-            className="px-6 py-2 bg-midnight-800 hover:bg-midnight-700 text-gold border border-midnight-700 rounded-lg transition-colors"
-          >
-            View More Articles
-          </Link>
-        </div>
-      </div>
-
       {/* Related Articles */}
       {relatedBlogs.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
