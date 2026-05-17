@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import multer from 'multer';
 
 // Load environment variables
 dotenv.config();
@@ -69,6 +70,14 @@ app.use(cors(corsOptions));
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Configure multer for handling file uploads (parse multipart/form-data)
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit per file
+  fields: 100 // limit number of fields
+});
+app.use(upload.any()); // Accept files under any field name
 
 // Initialize Firebase for notifications
 try {

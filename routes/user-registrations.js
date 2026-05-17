@@ -21,10 +21,17 @@ router.post('/', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      const errorMessage = errors.array().map(err => err.msg).join(', ');
+      return res.status(400).json({ message: errorMessage });
     }
 
     const { name, contactNumber, requirements } = req.body;
+
+    // Parse requirements if it's a string (from FormData)
+    let parsedRequirements = requirements;
+    if (typeof requirements === 'string') {
+      parsedRequirements = JSON.parse(requirements);
+    }
 
     // Create table if it doesn't exist
     await pool.query(`
@@ -43,7 +50,7 @@ router.post('/', [
       `INSERT INTO user_registrations (name, contact_number, requirements)
        VALUES ($1, $2, $3)
        RETURNING id, name, contact_number, requirements, created_at`,
-      [name, contactNumber, JSON.stringify(requirements)]
+      [name, contactNumber, JSON.stringify(parsedRequirements)]
     );
 
     // Send notification to admins (async, don't wait)
