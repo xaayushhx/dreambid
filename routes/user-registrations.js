@@ -3,13 +3,14 @@ import { body, validationResult } from 'express-validator';
 import pool from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
 import { notifyAdminsOfRegistration } from '../services/NotificationService.js';
+import { uploadAttachments } from '../middleware/upload.js';
 
 const router = express.Router();
 
 // @route   POST /api/user-registrations
 // @desc    Save user property requirements registration
 // @access  Public
-router.post('/', [
+router.post('/', uploadAttachments, [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('contactNumber')
     .trim()

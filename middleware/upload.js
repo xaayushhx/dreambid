@@ -48,6 +48,9 @@ const uploadImage = upload.single('image');
 // Middleware for PDF
 const uploadPdf = upload.single('pdf');
 
+// Middleware for attachments (for user registrations)
+const uploadAttachments = upload.array('attachment', 5);
+
 // Helper function to get image URL from multer file
 export const getFileUrl = (file) => {
   if (!file) return null;
@@ -58,6 +61,7 @@ export {
   upload,
   uploadImages,
   uploadImage,
-  uploadPdf
+  uploadPdf,
+  uploadAttachments
 };
 
