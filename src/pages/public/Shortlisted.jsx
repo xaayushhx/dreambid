@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useShortlist } from '../../contexts/ShortlistContext';
 import { getImageUrl } from '../../utils/imageUrl';
+import { shareProperty } from '../../utils/whatsapp';
 import toast from 'react-hot-toast';
 
 function Shortlisted() {
@@ -42,45 +43,48 @@ function Shortlisted() {
     }
   };
 
-  const renderPropertyCard = (property) => (
+  const renderPropertyCard = (property) => {
+    const imageUrl = property.cover_image_url || 
+      (property.images && property.images.length > 0 
+        ? (typeof property.images[0] === 'object' ? (property.images[0].image_data || property.images[0].image_url) : property.images[0])
+        : null);
+
+    return (
     <div
       key={property.id}
-      className="bg-midnight-900 border border-midnight-700 rounded-2xl overflow-hidden hover:border-midnight-600 hover:shadow-lg transition-all group"
+      className="group card overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full"
     >
-      {/* Image Container */}
-      <Link
-        to={`/properties/${property.id}`}
-        className="relative overflow-hidden bg-midnight-800 aspect-video block"
-      >
-        <img
-          src={getImageUrl(property.cover_image_url || 
-            (property.images && property.images.length > 0 
-              ? (typeof property.images[0] === 'object' ? (property.images[0].image_data || property.images[0].image_url) : property.images[0])
-              : null))}
-          alt={property.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23333" width="400" height="300"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
-          }}
-        />
-
+      <div className="relative h-48 md:h-64 overflow-hidden bg-midnight-800">
+        {imageUrl ? (
+          <img
+            src={getImageUrl(imageUrl)}
+            alt={property.title}
+            className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+            onError={(e) => {
+              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%231F2A3D" width="400" height="300"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-midnight-800">
+            <span className="text-text-secondary">No Image</span>
+          </div>
+        )}
+        
         {/* Status Badge */}
         {property.status && (
           <div className="absolute top-4 left-4">
             <span
-              className={`px-3 py-1 rounded-lg text-xs font-medium ${
+              className={`px-3 py-1 rounded-lg text-xs font-semibold backdrop-blur-sm ${
                 property.status === 'upcoming'
-                  ? 'bg-blue-50/20 text-blue-300 border border-blue-400/30'
+                  ? 'bg-gold/90 text-midnight-950'
                   : property.status === 'active'
-                  ? 'bg-green-50/20 text-green-300 border border-green-400/30'
+                  ? 'bg-status-live/90 text-white'
                   : property.status === 'expired'
-                  ? 'bg-red-50/20 text-red-300 border border-red-400/30'
-                  : property.status === 'sold'
-                  ? 'bg-purple-50/20 text-purple-300 border border-purple-400/30'
-                  : 'bg-gray-50/20 text-gray-300 border border-gray-400/30'
+                  ? 'bg-red-500/90 text-white'
+                  : 'bg-gray-500/90 text-white'
               }`}
             >
-              {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+              {property.status === 'active' ? '🔴 BIDDING LIVE' : property.status.toUpperCase()}
             </span>
           </div>
         )}
@@ -89,7 +93,7 @@ function Shortlisted() {
         {property.auction_date && (
           <div className="absolute top-4 right-4">
             <span className="bg-black/70 text-white text-xs font-medium px-3 py-1 rounded-lg">
-              {new Date(property.auction_date).toLocaleDateString()}
+              {new Date(property.auction_date).toLocaleDateString('en-IN', { month: '2-digit', day: '2-digit', year: '2-digit' })}
             </span>
           </div>
         )}
@@ -108,62 +112,60 @@ function Shortlisted() {
             <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
         </button>
-      </Link>
+      </div>
 
       {/* Property Details */}
-      <div className="p-5 flex flex-col h-full bg-midnight-900">
-        <Link
-          to={`/properties/${property.id}`}
-          className="group/title"
-        >
-          <h3 className="font-semibold text-text-primary text-base line-clamp-2 group-hover/title:text-gold transition mb-3">
-            {property.title || 'Property'}
+      <div className="p-4 md:p-6 flex flex-col h-full">
+        <div className="flex-grow">
+          <h3 className="text-lg md:text-xl font-bold text-white mb-2 line-clamp-2 min-h-14">
+            {property.title}
           </h3>
-        </Link>
-
-        {/* Location */}
-        <p className="text-sm text-text-secondary mb-4">
-          {property.city || 'Location'}
-          {property.state ? `, ${property.state}` : ''}
-        </p>
-
-        {/* Property Features */}
-        <div className="flex items-center gap-4 text-xs mb-4 flex-wrap">
-          {property.bedrooms && (
-            <div className="flex items-center gap-1">
-              <span className="text-text-primary font-medium">{property.bedrooms}</span>
-              <span className="text-text-secondary">BHK</span>
-            </div>
-          )}
-          <div className="flex items-center gap-1">
-            <span className="text-text-primary font-medium">{property.area && property.area !== 0 ? Math.round(property.area) : 'NA'}</span>
-            {property.area && property.area !== 0 && <span className="text-text-secondary">{property.area_unit || 'sq.ft.'}</span>}
-          </div>
-          {property.property_type && (
-            <div className="flex items-center gap-1">
-              <span className="text-text-secondary">{property.property_type}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Price */}
-        <div className="mt-auto pt-3 border-t border-midnight-700">
-          <p className="text-lg font-bold text-gold">
-            ₹{property.reserve_price ? property.reserve_price.toLocaleString() : 'N/A'}
+          <p className="text-text-secondary text-xs md:text-sm mb-3">
+            📍 {property.city}, {property.state} • {property.area && property.area !== 0 ? `${Math.round(property.area)} ${property.area_unit || 'sq.ft'}` : 'NA'}
           </p>
-          <p className="text-xs text-text-secondary mt-1">Reserve Price</p>
+          <div className="space-y-2">
+            <div>
+              <p className="text-text-secondary text-xs font-semibold uppercase tracking-wide mb-1">Reserve Price</p>
+              <p className="text-lg md:text-2xl font-bold text-gold">₹{parseFloat(property.reserve_price).toLocaleString('en-IN')}</p>
+            </div>
+            <div className="flex justify-between text-xs pt-2 border-t border-midnight-700">
+              <div>
+                <p className="text-text-secondary">Auction Date</p>
+                <p className="text-text-primary font-medium">
+                  {property.auction_date 
+                    ? new Date(property.auction_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'N/A'
+                  }
+                </p>
+              </div>
+              <div>
+                <p className="text-text-secondary">Property Type</p>
+                <p className="text-text-primary font-medium">{property.property_type || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* View Details Button */}
-        <Link
-          to={`/properties/${property.id}`}
-          className="mt-4 px-4 py-2 bg-gold/10 text-gold hover:bg-gold/20 rounded-lg transition text-center text-sm font-medium border border-gold/30 hover:border-gold"
-        >
-          View Details
-        </Link>
+        {/* Buttons */}
+        <div className="flex gap-2 md:gap-3 mt-4 md:mt-6 pt-4 md:pt-6 border-t border-midnight-700">
+          <Link
+            to={`/properties/${property.id}`}
+            className="flex-1 btn-primary text-center text-xs md:text-sm py-3 md:py-3 whitespace-nowrap"
+          >
+            View Details
+          </Link>
+          <button
+            onClick={() => shareProperty(property)}
+            className="px-3 md:px-4 py-3 md:py-3 bg-status-live text-white rounded-btn hover:bg-green-600 transition-all"
+            title="Share on WhatsApp"
+          >
+            <img src="/whatsapp.svg" alt="WhatsApp" className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-midnight-950">
