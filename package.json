@@ -10,7 +10,6 @@
     "@capacitor/core": "^8.1.0",
     "@capacitor/ios": "^8.1.0",
     "@capacitor/preferences": "^8.0.1",
-    "@capacitor/push-notifications": "^8.0.1",
     "@heroicons/react": "^2.2.0",
     "@react-google-maps/api": "^2.19.3",
     "axios": "^1.6.2",

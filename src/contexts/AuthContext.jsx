@@ -205,27 +205,10 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      // Unregister notification token if available
-      try {
-        const deviceToken = localStorage.getItem('deviceToken');
-        if (deviceToken && state.token) {
-          await api.post(
-            '/notifications/unregister-token',
-            { deviceToken },
-            {
-              headers: { Authorization: `Bearer ${state.token}` }
-            }
-          );
-        }
-      } catch (error) {
-        console.error('Failed to unregister device token:', error);
-        // Don't fail logout if token unregistration fails
-      }
-
       // Try to log the logout on the server
       await api.post('/auth/logout');
     } catch (error) {
-      console.error('Logout notification failed:', error);
+      console.error('Logout failed:', error);
     } finally {
       dispatch({ type: LOGOUT });
     }

@@ -8,7 +8,6 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import pool from './config/database.js';
 import CleanupService from './services/CleanupService.js';
-import { initializeFirebase } from './services/NotificationService.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -19,7 +18,6 @@ import enquiryRoutes from './routes/enquiries.js';
 import interestRoutes from './routes/interests.js';
 import blogRoutes from './routes/blogs.js';
 import userRegistrationRoutes from './routes/user-registrations.js';
-import notificationRoutes from './routes/notifications.js';
 
 // Configuration
 const __filename = fileURLToPath(import.meta.url);
@@ -304,13 +302,6 @@ runMigrations().catch(error => {
 // Initialize cleanup service (scheduled jobs)
 CleanupService.initSchedules();
 
-// Initialize Firebase for notifications (non-blocking)
-try {
-  initializeFirebase();
-} catch (error) {
-  console.warn('⚠️  Firebase initialization skipped:', error.message);
-}
-
 // Health check - simple and always available (BEFORE routes)
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
@@ -329,7 +320,6 @@ app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/interests', interestRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/user-registrations', userRegistrationRoutes);
-app.use('/api/notifications', notificationRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {

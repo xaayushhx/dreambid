@@ -17,8 +17,6 @@ import enquiryRoutes from '../routes/enquiries.js';
 import interestRoutes from '../routes/interests.js';
 import blogRoutes from '../routes/blogs.js';
 import userRegistrationRoutes from '../routes/user-registrations.js';
-import notificationRoutes from '../routes/notifications.js';
-import { initializeFirebase } from '../services/NotificationService.js';
 
 const app = express();
 
@@ -79,14 +77,6 @@ const upload = multer({
 });
 app.use(upload.any()); // Accept files under any field name
 
-// Initialize Firebase for notifications
-try {
-  initializeFirebase();
-  console.log('✓ Firebase initialized for push notifications');
-} catch (error) {
-  console.warn('⚠️  Firebase initialization failed - push notifications disabled:', error.message);
-}
-
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
@@ -96,7 +86,6 @@ app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/interests', interestRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/user-registrations', userRegistrationRoutes);
-app.use('/api/notifications', notificationRoutes);
 
 // Health check - simple and always available
 app.get('/api/health', (req, res) => {

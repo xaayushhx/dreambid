@@ -19,13 +19,6 @@
     },
     "SafeArea": {
       "enable": true
-    },
-    "PushNotifications": {
-      "presentationOption": [
-        "badge",
-        "sound",
-        "alert"
-      ]
     }
   }
 }

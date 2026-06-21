@@ -4,7 +4,6 @@ import pool from '../config/database.js';
 import jwt from 'jsonwebtoken';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { uploadImage } from '../middleware/upload.js';
-import { notifyAdminsOfEnquiry } from '../services/NotificationService.js';
 
 const router = express.Router();
 
@@ -60,18 +59,6 @@ router.post('/', [
 
     // Increment enquiries count
     await pool.query('UPDATE properties SET enquiries_count = enquiries_count + 1 WHERE id = $1', [property_id]);
-
-    // Send notification to admins/staff (async, don't wait)
-    notifyAdminsOfEnquiry(property_id, {
-      name,
-      email: email || 'Not provided',
-      phone,
-      property_title: propertyData.title,
-      message,
-    }).catch(error => {
-      console.error('Failed to send notification to admins:', error);
-      // Don't fail the request if notification fails
-    });
 
     res.status(201).json({ message: 'Enquiry submitted successfully', enquiry: result.rows[0] });
   } catch (error) {
@@ -224,41 +211,6 @@ router.post('/contact', uploadImage, [
     // For now, just log it
     if (attachmentData) {
       console.log(`Contact form attachment: ${attachmentName} (${attachmentMimeType}) - ${attachmentData.length} bytes`);
-    }
-
-    // Notify admins about new contact
-    try {
-      const notifyAdminsOfContact = async (contactData) => {
-        const adminResult = await pool.query(
-          `SELECT DISTINCT u.id FROM users u
-           INNER JOIN notification_tokens nt ON u.id = nt.user_id
-           WHERE u.role IN ('admin', 'staff') 
-           AND u.is_active = true
-           AND nt.is_active = true`
-        );
-
-        if (adminResult.rows.length > 0) {
-          const { initializeFirebase, sendNotificationToUser } = await import('../services/NotificationService.js');
-          initializeFirebase();
-          
-          for (const admin of adminResult.rows) {
-            await sendNotificationToUser(admin.id, {
-              title: 'New Contact Form Submission',
-              body: `${contactData.name} sent a message`,
-              data: {
-                type: 'contact',
-                senderEmail: contactData.email,
-                senderPhone: contactData.phone,
-                action: 'open_messages'
-              }
-            }).catch(err => console.error('Failed to notify admin:', err));
-          }
-        }
-      };
-
-      await notifyAdminsOfContact({ name, email, phone: contactNumber });
-    } catch (notifyError) {
-      console.error('Failed to notify admins:', notifyError);
     }
 
     res.status(201).json({ 

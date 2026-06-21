@@ -244,7 +244,10 @@ function Properties() {
 
                           {/* Wishlist Button */}
                           <button
-                            onClick={() => toggleShortlist(property.id)}
+                            onClick={() => {
+                              toggleShortlist(property);
+                              toast.success(isShortlisted(property.id) ? 'Removed from shortlist' : 'Added to shortlist');
+                            }}
                             className="absolute top-4 right-4 p-2 bg-midnight-800 rounded-full hover:bg-midnight-700 transition"
                           >
                             <svg className={`w-5 h-5 ${isShortlisted(property.id) ? 'fill-red-500 text-red-500' : 'text-text-muted'}`} viewBox="0 0 24 24">
