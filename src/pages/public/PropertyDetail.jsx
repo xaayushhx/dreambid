@@ -483,12 +483,10 @@ function PropertyDetail() {
                       <span className="text-sm font-medium text-text-primary">{property.property_type}</span>
                     </div>
                   )}
-                  {property.area && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-text-secondary">Area</span>
-                      <span className="text-sm font-medium text-text-primary">{formatNumber(property.area)} {property.area_unit || 'sq.ft.'}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-sm text-text-secondary">Area</span>
+                    <span className="text-sm font-medium text-text-primary">{property.area && property.area !== 0 ? `${formatNumber(property.area)} ${property.area_unit || 'sq.ft.'}` : 'NA'}</span>
+                  </div>
                   {property.built_up_area && (
                     <div className="flex justify-between">
                       <span className="text-sm text-text-secondary">Built-Up Area</span>

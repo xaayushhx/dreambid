@@ -49,6 +49,7 @@ function PropertyForm() {
   const [existingImages, setExistingImages] = useState([]);
   const [coverImageId, setCoverImageId] = useState(null);
   const [imagesToRemove, setImagesToRemove] = useState([]);
+  const [validationErrors, setValidationErrors] = useState([]);
 
   useEffect(() => {
     if (propertyData?.data?.data?.property) {
@@ -87,11 +88,26 @@ function PropertyForm() {
     }
   }, [propertyData]);
 
+  const validateForm = () => {
+    const errors = [];
+    
+    // Check mandatory fields
+    if (!formData.title?.trim()) errors.push('Title is required');
+    if (!formData.address?.trim()) errors.push('Address is required');
+    if (!formData.property_type?.trim()) errors.push('Property Type is required');
+    if (!formData.reserve_price) errors.push('Reserve Price is required');
+    if (!formData.auction_date) errors.push('Auction Date is required');
+    if (!formData.emd) errors.push('EMD Price is required');
+    
+    return errors;
+  };
+
   const createMutation = useMutation(
     (formDataToSend) => propertiesAPI.create(formDataToSend),
     {
       onSuccess: async () => {
         toast.success('Property created successfully!');
+        setValidationErrors([]);
         // Invalidate all property-related queries with refetch
         await queryClient.invalidateQueries({ 
           queryKey: ['properties'],
@@ -178,6 +194,18 @@ function PropertyForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate mandatory fields
+    const errors = validateForm();
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      errors.forEach(error => toast.error(error));
+      // Scroll to top to show errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    setValidationErrors([]);
+
     try {
       // Create FormData for multipart/form-data upload
       const submitFormData = new FormData();
@@ -233,6 +261,21 @@ function PropertyForm() {
       </h1>
 
       <form onSubmit={handleSubmit} className="bg-midnight-800 rounded-lg shadow-lg border border-midnight-700 p-6 space-y-6">
+        {/* Validation Errors */}
+        {validationErrors.length > 0 && (
+          <div className="bg-red-900/20 border border-red-700 rounded-lg p-4">
+            <h3 className="text-red-500 font-semibold mb-2">Please fix the following errors:</h3>
+            <ul className="text-red-400 text-sm space-y-1">
+              {validationErrors.map((error, index) => (
+                <li key={index} className="flex items-center gap-2">
+                  <span className="text-lg">•</span>
+                  {error}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Basic Information */}
         <div>
           <h2 className="text-xl font-semibold text-white mb-4 pb-3 border-b border-midnight-700">Basic Information</h2>
@@ -252,15 +295,17 @@ function PropertyForm() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                Property Type
+                Property Type *
               </label>
               <select
                 name="property_type"
+                required
                 value={formData.property_type}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
               >
                 <option value="">Select Type</option>
+                <option value="flat">Flat</option>
                 <option value="house">House</option>
                 <option value="apartment">Apartment</option>
                 <option value="land">Land</option>
@@ -549,12 +594,13 @@ function PropertyForm() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                EMD - Earnest Money Deposit (₹)
+                EMD - Earnest Money Deposit (₹) *
               </label>
               <input
                 type="number"
                 step="0.01"
                 name="emd"
+                required
                 value={formData.emd}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
@@ -562,11 +608,12 @@ function PropertyForm() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                Auction Date
+                Auction Date *
               </label>
               <input
                 type="date"
                 name="auction_date"
+                required
                 value={formData.auction_date}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-midnight-600 bg-midnight-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
